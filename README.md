@@ -241,7 +241,9 @@ About the board:
     - button pressed - hw_event(1), and
     - button depressed - hw_event(2)
 - sleep, tic/toc:
+
   through *SysTick_Handler()* which counts in 1ms increments through interrupts
+
 - firmware footprint with all features enabled and 6 test scripts (bytes):
   29628 flash, 552 data, 2776 bss
 
