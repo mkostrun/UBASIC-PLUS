@@ -59,37 +59,31 @@ str_fixedpt, which converts a string to fixed point integer.
 - Strings can be encompassed by single or double quotations
 - Besides '\n', ';' can also be used as end-of-line character
 - println
-    at the end of printout add an empty line '\n'
+      at the end of printout add an empty line '\n'
 - Two character logical operators are also implemented (<>,<=,>=,==)
 - 26 fixed point arrays, named a@ to z@, dynamically allocated using DIM command,
 and accessed through index, e.g., a@(i)
 - sleep(f),
-    where f is fixed point number in seconds. sleep is NOT executed inside
-    the BASIC interpreter
+      where f is fixed point number in seconds. sleep is NOT executed inside the BASIC interpreter
 - input {a,a$,a@(i)}, timeout
-    wait until timeout for input through serial port, external functions for
-    serial-availabe and serial-read have to be supplied - see documentation in config.h
+      wait until timeout for input through serial port, external functions for serial-availabe and serial-read have to be supplied - see documentation in config.h
 - ran
-    system random number generator based on the external function - see documentation
-    in config.h
+      system random number generator based on the external function - see documentation in config.h
 - tic(n), a=toc(n)
-    rlabplus type six timers for measuring the passed time from different breakpoints
-    in the script
+      rlabplus type six timers for measuring the passed time from different breakpoints in the script
 - sqrt, sin, cos, tan, exp, ln, pow
-    fixed point arithmetic single argument functions from fixed point math library
+      fixed point arithmetic single argument functions from fixed point math library
 - floor, ceil, round
-    fixed point float to fixed point integer arithmetic functions
+      fixed point float to fixed point integer arithmetic functions
 - uniform
-    system fixed point random number generator in the range 0.000 to 0.999.
+      system fixed point random number generator in the range 0.000 to 0.999.
 - gpio(pin,state), gpio(pin)
-    direct control over digital pins. Tied to hardware specific functions as described
-    in config.h
+      direct control over digital pins. Tied to hardware specific functions as described in config.h
 - pwm(channel,value)
-    direct control over output pins that support PWM on the micro-controller. Tied to
-    hardware functions described in config.h
+      direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
 - hw_event(channel)
-    access to flags that can be set outside BASIC interpreter, e.g., using interrupts,
-    that are available to BASIC scripts for flow control.
+      access to flags that can be set outside BASIC interpreter, e.g., using interrupts, that are available to BASIC scripts for flow control.
+
 
 The uBasic-Plus comprise of six files config.h, fixedptc.h, tokenizer.c,
 tokenizer.h, ubasic.c  and  ubasic.h.
