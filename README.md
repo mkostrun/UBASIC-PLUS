@@ -211,7 +211,7 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 60 end;",
 ```
 
-### 5th example - input values but wait only for 2sec
+### 5th example - input array values in 2sec time
 ```
 10 println 'start of test 6'
 11 dim a@(5)
