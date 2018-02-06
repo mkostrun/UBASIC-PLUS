@@ -244,6 +244,10 @@ About the board:
 
   through *SysTick_Handler()* which counts in 1ms increments through interrupts
 
+- Serial Port
+
+  through USB connector used for debugging (UART2 on PA2/PA3)
+
 - firmware footprint with all features enabled and 6 test scripts (bytes):
   32080 flash, 552 data, 2768 bss.
 
@@ -260,6 +264,10 @@ About the board:
 - sleep, tic/toc:
 
   through *SysTick_Handler()* which counts in 1ms increments through interrupts
+
+- Serial Port
+
+  requires an additional USB/TTL cable (UART2 using PA2/PA3 on the discovery board)
 
 - firmware footprint with all features enabled and 6 test scripts (bytes):
   32080 flash, 544 data, 2768 bss.
