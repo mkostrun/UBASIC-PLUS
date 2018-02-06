@@ -234,12 +234,12 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 
 About the board:
 - Arm Cortex M0 64kb flash, 8kb ram, 48MHz frequency
-- GPIO: Pins C0,C1,C2,C3
-- PWM:  Timer 3 Channels 1 (A6), 2 (A7), 3 (B0) and 4 (B1)
+- GPIO: PC0, PC1, PC2, PC3
+- PWM:  Timer 3 Channels 1 (PA6), 2 (PA7), 3 (PB0) and 4 (PB1)
 - Hardware Events:
-    Push Button 1 (C13)
-        Two events: button pressed - hw_event(1), and
-                    button depressed - hw_event(2)
+      - Push Button 1 (C13) with two events:
+            - button pressed - hw_event(1), and
+            - button depressed - hw_event(2)
 - sleep, tic/toc:
     through SysTick_Handler() that is by default configured for
     1ms interrupts
