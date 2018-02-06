@@ -232,6 +232,7 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 
 ### STM32F030R8-Nucleo64
 
+About the board:
 - Arm Cortex M0 64kb flash, 8kb ram, 48MHz frequency
 - GPIO: Pins C0,C1,C2,C3
 - PWM:  Timer 3 Channels 1 (A6), 2 (A7), 3 (B0) and 4 (B1)
