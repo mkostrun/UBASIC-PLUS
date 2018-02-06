@@ -139,7 +139,7 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 30 println 'end of test 2'
 ```
 
-### 3rd example - deme of Plus
+### 3rd example - demonstration of Plus capabilities
 ```
 10 println 'start of test 3'
 11 tic(1)
