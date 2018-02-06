@@ -1,7 +1,6 @@
-UBASIC
+# UBASIC PLUS
 
-
-
+## UBASIC
 
 uBasic is a small non-interactive interpreter of the programming language BASIC
 which offers a subset of the commands that are part of the language:
@@ -20,9 +19,7 @@ It was written by Adam Dunkels circa 2006, and the code is available at github:
 https://github.com/adamdunkels/ubasic.
 
 
-
-
-UBASIC WITH STRINGS
+## UBASIC WITH STRINGS
 
 uBasic with strings is a enhanced version of uBasic which adds support for strings:
 - 26 string variables, named a$-z$, string literals, variables and expressions can
@@ -47,14 +44,10 @@ for equality in if statements string expressions can be concatenated using '+'
 - asc(s$),
     returns the ASCII code for the first character in s$ - opposite of val()
     uBasic with strings was written by David Mitchell circa 2008, and the code is
-    available from the author's web site:
-
-http://www.zenoshrdlu.com/kapstuff/zsubasic.html
+    available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasic.html
 
 
-
-
-UBASIC PLUS
+## UBASIC PLUS
 
 uBasic Plus is a further enhanced version of 'uBasic with strings' which adds
 the following functionalities:
@@ -98,20 +91,18 @@ and accessed through index, e.g., a@(i)
     access to flags that can be set outside BASIC interpreter, e.g., using interrupts,
     that are available to BASIC scripts for flow control.
 
-The uBasic-Plus comprise of five six files config.h, fixedptc.h, tokenizer.c,
+The uBasic-Plus comprise of six files config.h, fixedptc.h, tokenizer.c,
 tokenizer.h, ubasic.c  and  ubasic.h.
 As an example implementation of the hardware related functions (random number generation,
 gpio, hardware events, sleep and tic/toc) the development boards STM32F030-Nucleo64 and
 STM32F051-Discovery are used in combination with CubeMX created system libraries.
 
 
+## UBASIC PLUS SCRIPT EXAMPLES
 
 
-UBASIC PLUS SCRIPT EXAMPLES
-
-
-1st example - warm up
-
+### 1st example - warm up
+...
 9 println 'start of test 1'
 10 gosub 100
 20 for i = 1 to 20
@@ -123,10 +114,10 @@ UBASIC PLUS SCRIPT EXAMPLES
 60 end
 100 println 'subroutine'
 110 return
+...
 
-
-2nd example by David Mitchell for his 'uBasic with strings'
-
+### 2nd example by David Mitchell for his 'uBasic with strings'
+...
 1 println 'start of test 2'
 2 a$= 'abcdefghi'
 3 b$='123456789'
@@ -153,10 +144,10 @@ UBASIC PLUS SCRIPT EXAMPLES
 24 println 'position of 67 in 123456789 is', i
 25 println mid$(a$,2,2)+'xyx'
 30 println 'end of test 2'
+...
 
-
-3rd example - deme of Plus
-
+### 3rd example - deme of Plus
+...
 10 println 'start of test 3'
 11 tic(1)
 12 for i = 1 to 20
@@ -210,10 +201,10 @@ UBASIC PLUS SCRIPT EXAMPLES
 96 println 'Push button de-pressed!'
 98 println 'end of test 3'
 99 end
+...
 
-
-4th example - arrays
-
+### 4th example - arrays
+...
 10 println 'start of test 4'
 11 for i = 1 to 100
 12 n = floor(10 * uniform) + 2
@@ -225,10 +216,10 @@ UBASIC PLUS SCRIPT EXAMPLES
 40 next i
 50 println 'end of test 4'
 60 end;",
+...
 
-
-5th example - input values but wait only for 2sec
-
+### 5th example - input values but wait only for 2sec
+...
 10 println 'start of test 6'
 11 dim a@(5)
 11 for i = 1 to 5
@@ -241,14 +232,12 @@ UBASIC PLUS SCRIPT EXAMPLES
 22 next i
 50 println 'end of test 6'
 60 end
+...
+
+## UBASIC PLUS HARDWARE IMPLEMENTATION EXAMPLES
 
 
-
-
-UBASIC PLUS HARDWARE IMPLEMENTATION EXAMPLES
-
-
-STM32F030R8-Nucleo64
+### STM32F030R8-Nucleo64
 
 - Arm Cortex M0 64kb flash, 8kb ram, 48MHz frequency
 - GPIO: Pins C0,C1,C2,C3
