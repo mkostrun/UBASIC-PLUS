@@ -251,7 +251,7 @@ About the board:
 - firmware footprint with all features enabled and 6 test scripts (bytes):
   32080 flash, 552 data, 2768 bss.
 
-### STM32F061R8-Discovery
+### STM32F051R8-Discovery
 
 About the board:
 - Arm Cortex M0 64kb flash, 8kb ram, 48MHz frequency
