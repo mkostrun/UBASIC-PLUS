@@ -14,9 +14,7 @@ which offers a subset of the commands that are part of the language:
 - 'new line' as end-of-line character
 
 
-It also supports some mathematical expressions for integer variables, where
-the variables can have only single character names.
-It was written by Adam Dunkels circa 2006, and the code is available at github: https://github.com/adamdunkels/ubasic.
+uBasic was written by Adam Dunkels circa 2006, and the code is available at github: https://github.com/adamdunkels/ubasic.
 
 
 ## UBASIC WITH STRINGS
