@@ -11,7 +11,7 @@ which offers a subset of the commands that are part of the language:
 - goto
 - gosub
 - print
-- 'new line' as end-of-line character
+- '\n' (new line) as end-of-line character
 
 
 uBasic was written by Adam Dunkels circa 2006, and the code is available at github: https://github.com/adamdunkels/ubasic.
