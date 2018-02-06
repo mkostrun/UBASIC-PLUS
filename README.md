@@ -237,13 +237,12 @@ About the board:
 - GPIO: PC0, PC1, PC2, PC3
 - PWM:  Timer 3 Channels 1 (PA6), 2 (PA7), 3 (PB0) and 4 (PB1)
 - Hardware Events:
-  - Push Button 1 (C13) with two events:
+  - Push Button 1 (PC13) with two events:
     - button pressed - hw_event(1), and
     - button depressed - hw_event(2)
 - sleep, tic/toc:
-    through SysTick_Handler() that is by default configured for
-    1ms interrupts
+  through *SysTick_Handler()* which counts in 1ms increments through interrupts
 - firmware footprint with all features enabled and 6 test scripts (bytes):
-    29628 flash, 552 data, 2776 bss
+  29628 flash, 552 data, 2776 bss
 
 
