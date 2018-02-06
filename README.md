@@ -245,6 +245,21 @@ About the board:
   through *SysTick_Handler()* which counts in 1ms increments through interrupts
 
 - firmware footprint with all features enabled and 6 test scripts (bytes):
-  29628 flash, 552 data, 2776 bss
+  32080 flash, 552 data, 2768 bss.
 
+### STM32F061R8-Discovery
 
+About the board:
+- Arm Cortex M0 64kb flash, 8kb ram, 48MHz frequency
+- GPIO: PC0, PC1, PC2, PC3
+- PWM:  Timer 3 Channels 1 (PA6), 2 (PA7), 3 (PB0) and 4 (PB1)
+- Hardware Events:
+  - Push Button 1 (PA0) with two events:
+    - button pressed - hw_event(1), and
+    - button depressed - hw_event(2)
+- sleep, tic/toc:
+
+  through *SysTick_Handler()* which counts in 1ms increments through interrupts
+
+- firmware footprint with all features enabled and 6 test scripts (bytes):
+  32080 flash, 544 data, 2768 bss.
