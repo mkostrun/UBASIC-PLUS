@@ -23,23 +23,23 @@ uBasic with strings is a enhanced version of uBasic which adds support for strin
 - 26 string variables, named a$-z$, string literals, variables and expressions can
 be used in assignments and print statements string expressions can be compared
 for equality in if statements string expressions can be concatenated using '+'
-- left$(s$, i)
+- *left$(s$, i)*
     returns the first i characters of s$
-- mid$(s$, i, j)
+- *mid$(s$, i, j)*
     returns the substring of length j starting at position i in s$
-- right(s$, i, j),
+- *right(s$, i, j)*
     returns the last i characters of s$
-- str$(i),
+- *str$(i)*
     returns the integer value i as a string - opposite of val()
-- chr$(i),
+- *chr$(i)*
     returns the i'th ASCII character - opposite of asc()
-- val(s$),
+- *val(s$)*
     returns the numeric value of the string of digits s$ - opposite of str()
-- len$(s$),
+- *len$(s$)*
     returns the number of characters in s$
-- instr$(t$, s$),
+- *instr$(t$, s$)*
     returns the position of the string t$ in s$ (or 0)
-- asc(s$),
+- *asc(s$)*
     returns the ASCII code for the first character in s$ - opposite of val()
 
 uBasic with strings was written by David Mitchell circa 2008, and the code is
