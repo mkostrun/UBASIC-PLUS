@@ -5,12 +5,12 @@
 uBasic is a small non-interactive interpreter of the programming language BASIC
 which offers a subset of the commands that are part of the language:
 - 26 integer variables, named 'a' through 'z'
-- if/then/else, with support for single symbol logical operators (>,<,=)
-- for/next
-- let
-- goto
-- gosub
-- print
+- *if/then/else* with support for single symbol logical operators (>,<,=)
+- *for/next*
+- *let*
+- *goto*
+- *gosub*
+- *print*
 - '\n' (new line) as end-of-line character
 
 
@@ -62,25 +62,25 @@ str_fixedpt, which converts a string to fixed point integer.
 - Two character logical operators are also implemented (<>,<=,>=,==)
 - 26 fixed point arrays, named a@ to z@, dynamically allocated using DIM command,
 and accessed through index, e.g., a@(i)
-- sleep(f),
+- *sleep(f)*,
       where f is fixed point number in seconds. sleep is NOT executed inside the BASIC interpreter
-- input {a,a$,a@(i)}, timeout
+- *input {a,a$,a@(i)}, timeout*
       wait until timeout for input through serial port, external functions for serial-availabe and serial-read have to be supplied - see documentation in config.h
 - ran
       system random number generator based on the external function - see documentation in config.h
-- tic(n), a=toc(n)
+- *tic(n), a=toc(n)*
       rlabplus type six timers for measuring the passed time from different breakpoints in the script
-- sqrt, sin, cos, tan, exp, ln, pow
+- *sqrt, sin, cos, tan, exp, ln, pow*
       fixed point arithmetic single argument functions from fixed point math library
-- floor, ceil, round
+- *floor, ceil, round*
       fixed point float to fixed point integer arithmetic functions
-- uniform
+- *uniform*
       system fixed point random number generator in the range 0.000 to 0.999.
-- gpio(pin,state), gpio(pin)
+- *gpio(pin,state), a=gpio(pin)*
       direct control over digital pins. Tied to hardware specific functions as described in config.h
-- pwm(channel,value)
+- *pwm(channel,value), pwm(channel)*
       direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
-- hw_event(channel)
+- *hw_event(channel)*
       access to flags that can be set outside BASIC interpreter, e.g., using interrupts, that are available to BASIC scripts for flow control.
 
 
