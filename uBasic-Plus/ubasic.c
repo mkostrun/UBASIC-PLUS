@@ -1099,7 +1099,7 @@ static void print_statement(uint8_t println)
 #endif
       {
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-        fixedpt_str(expr(), string, FIXEDPT_FBITS>>1 );
+        fixedpt_str(expr(), string, FIXEDPT_FBITS/3 );
 #else
         sprintf(string, "%d", expr());
 #endif
@@ -1425,7 +1425,6 @@ static void input_statement_wait (void)
     if (r>0)
     {
       ubasic_script_wait_for_input_ms = r;
-      ubasic_script_wait_for_input_expired = 0;
     }
   }
 
@@ -1439,7 +1438,7 @@ static void serial_input_completed(void)
   // transfer serial input buffer to 'buf' only if something
   // has been received.
   // otherwise leave the variable content unchanged.
-  if (serial_input(string,MAX_STRINGLEN,UBASIC_SERIAL_INPUT_MS)>0)
+  if (serial_input(string,MAX_STRINGLEN)>0)
   {
     if ( (input_type == 0)
   #if defined(VARIABLE_TYPE_ARRAY)
@@ -1595,13 +1594,11 @@ void ubasic_run(void)
 #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
   if (sleep_for_input)
   {
-    if (ubasic_script_wait_for_input_ms > 0)
-      return;
-
-    if ( (serial_input_available(UBASIC_SERIAL_INPUT_MS)==0) &&
-          (ubasic_script_wait_for_input_expired==0) )
-      return;
-
+    if (serial_input_available()==0)
+    {
+      if (ubasic_script_wait_for_input_ms > 0)
+        return;
+    }
     serial_input_completed();
   }
 #endif
@@ -1761,7 +1758,7 @@ void ubasic_dim_arrayvariable(uint8_t varnum, uint16_t newsize)
 void ubasic_set_arrayvariable(uint8_t varnum, uint16_t idx,  VARIABLE_TYPE value)
 {
   uint16_t size = (uint16_t) arrays_data[arrayvariable[varnum]];
-  if ((size < idx)&&(idx<1))
+  if ((size < idx)||(idx<1))
     return;
 
   arrays_data[arrayvariable[varnum] + idx] = value;

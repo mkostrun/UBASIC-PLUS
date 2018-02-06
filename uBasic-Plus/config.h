@@ -226,8 +226,8 @@ void print_serial(char * msg){;}
 
 #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
 #define UBASIC_SERIAL_INPUT_MS  50
-uint8_t serial_input_available(uint16_t timeout_ms);
-uint8_t serial_input (char * buffer, uint8_t len, uint16_t timeout);
+uint8_t serial_input_available();
+uint8_t serial_input (char * buffer, uint8_t len);
 extern volatile uint32_t ubasic_script_wait_for_input_ms;
 extern uint8_t ubasic_script_wait_for_input_expired;
 #endif
