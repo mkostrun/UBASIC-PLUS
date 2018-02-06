@@ -12,11 +12,11 @@ which offers a subset of the commands that are part of the language:
 - gosub
 - print
 - 'new line' as end-of-line character
+
+
 It also supports some mathematical expressions for integer variables, where
 the variables can have only single character names.
-It was written by Adam Dunkels circa 2006, and the code is available at github:
-
-https://github.com/adamdunkels/ubasic.
+It was written by Adam Dunkels circa 2006, and the code is available at github: https://github.com/adamdunkels/ubasic.
 
 
 ## UBASIC WITH STRINGS
@@ -43,8 +43,9 @@ for equality in if statements string expressions can be concatenated using '+'
     returns the position of the string t$ in s$ (or 0)
 - asc(s$),
     returns the ASCII code for the first character in s$ - opposite of val()
-    uBasic with strings was written by David Mitchell circa 2008, and the code is
-    available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasic.html
+
+uBasic with strings was written by David Mitchell circa 2008, and the code is
+available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasic.html
 
 
 ## UBASIC PLUS
