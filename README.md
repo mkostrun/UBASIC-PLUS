@@ -97,7 +97,7 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 
 
 ### 1st example - warm up
-...
+```
 9 println 'start of test 1'
 10 gosub 100
 20 for i = 1 to 20
@@ -109,10 +109,10 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 60 end
 100 println 'subroutine'
 110 return
-...
+```
 
 ### 2nd example by David Mitchell for his 'uBasic with strings'
-...
+```
 1 println 'start of test 2'
 2 a$= 'abcdefghi'
 3 b$='123456789'
@@ -139,10 +139,10 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 24 println 'position of 67 in 123456789 is', i
 25 println mid$(a$,2,2)+'xyx'
 30 println 'end of test 2'
-...
+```
 
 ### 3rd example - deme of Plus
-...
+```
 10 println 'start of test 3'
 11 tic(1)
 12 for i = 1 to 20
@@ -196,10 +196,10 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 96 println 'Push button de-pressed!'
 98 println 'end of test 3'
 99 end
-...
+```
 
 ### 4th example - arrays
-...
+```
 10 println 'start of test 4'
 11 for i = 1 to 100
 12 n = floor(10 * uniform) + 2
@@ -211,10 +211,10 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 40 next i
 50 println 'end of test 4'
 60 end;",
-...
+```
 
 ### 5th example - input values but wait only for 2sec
-...
+```
 10 println 'start of test 6'
 11 dim a@(5)
 11 for i = 1 to 5
@@ -227,7 +227,7 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 22 next i
 50 println 'end of test 6'
 60 end
-...
+```
 
 ## UBASIC PLUS HARDWARE IMPLEMENTATION EXAMPLES
 
