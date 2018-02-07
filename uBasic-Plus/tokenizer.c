@@ -36,6 +36,8 @@
 
 #include "config.h"
 #include "tokenizer.h"
+extern volatile _Status ubasic_status;
+extern uint16_t current_linenum;
 
 static char const *ptr, *nextptr;
 
@@ -66,32 +68,31 @@ static const struct keyword_token keywords[] =
   {"asc",                     TOKENIZER_ASC},
 #endif
 // end of string additions
-  {"let", TOKENIZER_LET},
-  {"println", TOKENIZER_PRINTLN},
-  {"print", TOKENIZER_PRINT},
-  {"if", TOKENIZER_IF},
-  {"then", TOKENIZER_THEN},
-  {"else", TOKENIZER_ELSE},
-  {"for", TOKENIZER_FOR},
+  {"let ", TOKENIZER_LET},
+  {"println ", TOKENIZER_PRINTLN},
+  {"print ", TOKENIZER_PRINT},
+  {"if ", TOKENIZER_IF},
+  {"then ", TOKENIZER_THEN},
+  {"else ", TOKENIZER_ELSE},
+  {"for ", TOKENIZER_FOR},
 #if defined(UBASIC_SCRIPT_HAVE_TICTOC)
   {"toc", TOKENIZER_TOC},
 #endif
 #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
   {"input", TOKENIZER_INPUT},
 #endif
-  {"to", TOKENIZER_TO},
-  {"next", TOKENIZER_NEXT},
-  {"goto", TOKENIZER_GOTO},
-  {"gosub", TOKENIZER_GOSUB},
+  {"to ", TOKENIZER_TO},
+  {"next ", TOKENIZER_NEXT},
+  {"goto ", TOKENIZER_GOTO},
+  {"gosub ", TOKENIZER_GOSUB},
   {"return", TOKENIZER_RETURN},
-  {"call", TOKENIZER_CALL},
   {"end", TOKENIZER_END},
 // CHDK inspired additions: Start
 #if defined(UBASIC_SCRIPT_HAVE_SLEEP)
   {"sleep", TOKENIZER_SLEEP},
 #endif
 #if defined(VARIABLE_TYPE_ARRAY)
-  {"dim", TOKENIZER_DIM},
+  {"dim ", TOKENIZER_DIM},
 #endif
 #if defined(UBASIC_SCRIPT_HAVE_TICTOC)
   {"tic", TOKENIZER_TIC},
@@ -123,6 +124,8 @@ static const struct keyword_token keywords[] =
 #ifdef UBASIC_SCRIPT_HAVE_PWM_CHANNELS
   {"pwm", TOKENIZER_PWM},
 #endif
+  {"hex ", TOKENIZER_PRINT_HEX},
+  {"dec ", TOKENIZER_PRINT_DEC},
 // CHDK inspired additions: End
   {NULL, TOKENIZER_ERROR}
 };
@@ -227,67 +230,90 @@ static uint8_t get_next_token(void)
     return TOKENIZER_ENDOFINPUT;
   }
 
-#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   uint8_t have_decdot=0, i_dot=0;
-  if( isdigit(*ptr) || (*ptr=='.') )
+  if ( (ptr[0]=='0') && ((ptr[1]=='x')||(ptr[1]=='X')) )
   {
-    for(i=0; i<MAX_NUMLEN; i++)
+    // is it HEX
+    nextptr = ptr + 2;
+    while (1)
     {
-      if (ptr[i]=='.')
+      if (*nextptr>='0' && *nextptr<='9')
       {
-        i_dot = i;
+        nextptr++;
+        continue;
+      }
+      if ( (*nextptr>='a') && (*nextptr<='f') )
+      {
+        nextptr++;
+        continue;
+      }
+      if ( (*nextptr>='A') && (*nextptr<='F') )
+      {
+        nextptr++;
+        continue;
+      }
+      if ( (*nextptr==' ') || (*nextptr=='\n') || (*nextptr=='\t') ||
+             (*nextptr==';') || (*nextptr==0) )
+        return TOKENIZER_INT;
+
+      return TOKENIZER_ERROR;
+    }
+  }
+  else if ( (ptr[0]=='0') && ((ptr[1]=='b')||(ptr[1]=='B')) )
+  {
+    // is it BIN
+    nextptr = ptr + 2;
+    while (1)
+    {
+      if (*nextptr>='0' && *nextptr<='1')
+      {
+        nextptr++;
+        continue;
+      }
+      if ( (*nextptr==' ') || (*nextptr=='\n') || (*nextptr=='\t') ||
+             (*nextptr==';') || (*nextptr==0) )
+        return TOKENIZER_INT;
+
+      return TOKENIZER_ERROR;
+    }
+  }
+  else if( isdigit(*ptr) || (*ptr=='.') )
+  {
+    // is it
+    //    FLOAT (digits with at most one decimal point)
+    // or is it
+    //    DEC (digits without decimal point which ends in d,D,L,l,U,u)
+    nextptr = ptr;
+    have_decdot = 0;
+    i_dot = 0;
+    while (1)
+    {
+      if (*nextptr>='0' && *nextptr<='9')
+      {
+        nextptr++;
+        if (have_decdot)
+          i_dot++;
+        continue;
+      }
+      if (*nextptr=='.')
+      {
+        nextptr++;
         have_decdot++;
         if (have_decdot>1)
           return TOKENIZER_ERROR;
         continue;
       }
-      if(!isdigit(ptr[i]))
-      {
-        if(i > 0)
-        {
-          nextptr = ptr + i;
-          if (have_decdot && i_dot < i-1)
-            return TOKENIZER_FLOAT;
-          else
-            return TOKENIZER_NUMBER;
-        }
-        else
-        {
-          return TOKENIZER_ERROR;
-        }
-      }
-      if(!isdigit(ptr[i]))
-      {
-        return TOKENIZER_ERROR;
-      }
+      if (*nextptr=='d' || *nextptr=='D' || *nextptr=='l' || *nextptr=='L')
+        return TOKENIZER_INT;
+
+  #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+      if (i_dot)
+        return TOKENIZER_FLOAT;
+  #endif
+
+      return TOKENIZER_NUMBER;
     }
-    return TOKENIZER_ERROR;
   }
-#else
-  if (isdigit(*ptr))
-  {
-    for(i=0; i<MAX_NUMLEN; i++)
-    {
-      if(!isdigit(ptr[i]))
-      {
-        if(i > 0)
-        {
-          nextptr = ptr + i;
-          return TOKENIZER_NUMBER;
-        }
-        else
-        {
-          return TOKENIZER_ERROR;
-        }
-      }
-      if(!isdigit(ptr[i]))
-      {
-        return TOKENIZER_ERROR;
-      }
-    }
-    return TOKENIZER_ERROR;
-  }
-#endif
   else if(singlechar_or_operator(&i))
   {
     nextptr = ptr + i;
@@ -296,6 +322,7 @@ static uint8_t get_next_token(void)
 #if defined(VARIABLE_TYPE_STRING)
   else if(*ptr == '"' || *ptr == '\'')
   {
+    i = *ptr;
     nextptr = ptr;
     do
     {
@@ -303,8 +330,9 @@ static uint8_t get_next_token(void)
       if ((*nextptr=='\0')||(*nextptr=='\n')||(*nextptr==';'))
         return TOKENIZER_ERROR;
     }
-    while(*nextptr != '"' && *nextptr != '\'');
-    ++nextptr;
+    while(*nextptr != i && *(nextptr-1) != '\\');
+      ++nextptr;
+
     return TOKENIZER_STRING;
   }
 #endif
@@ -409,11 +437,76 @@ void tokenizer_next(void)
   return;
 }
 /*---------------------------------------------------------------------------*/
+
 VARIABLE_TYPE tokenizer_num(void)
 {
-  VARIABLE_TYPE rval;
-  rval = atoi(ptr);
+  uint8_t *c = (uint8_t *) ptr;
+  VARIABLE_TYPE rval=0;
+  while (1)
+  {
+    if (*c<'0' || *c>'9')
+      break;
+
+    rval *= 10;
+    rval += (*c - '0');
+    c++;
+  }
   return rval;
+}
+
+
+VARIABLE_TYPE tokenizer_int(void)
+{
+  uint8_t *c = (uint8_t *) ptr;
+  VARIABLE_TYPE rval=0;
+  if ( (*c=='0') && (*(c+1)=='x' || *(c+1)=='X') )
+  {
+    c+= 2;
+    while (1)
+    {
+      if (*c>='0' && *c<='9')
+      {
+        rval <<= 4;
+        rval += (*c - '0');
+        c++;
+        continue;
+      }
+      if ((*c>='a') && (*c<='f'))
+      {
+        rval <<= 4;
+        rval += (*c - 87); // 87 = 'a' - 10
+        c++;
+        continue;
+      }
+      if ((*c>='A') && (*c<='F'))
+      {
+        rval <<= 4;
+        rval += (*c - 55);// 55 = 'A' - 10
+        c++;
+        continue;
+      }
+      break;
+    }
+    return rval;
+  }
+  if ( (*c=='0') && (*(c+1)=='b' || *(c+1)=='B') )
+  {
+    c+= 2;
+    while (1)
+    {
+      if (*c=='0' || *c=='1')
+      {
+        rval <<= 1;
+        rval += (*c - '0');
+        c++;
+        continue;
+      }
+      break;
+    }
+    return rval;
+  }
+
+  return tokenizer_num();
 }
 
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
@@ -452,20 +545,33 @@ void tokenizer_string(char *dest, uint8_t len)
 }
 #endif
 /*---------------------------------------------------------------------------*/
-void tokenizer_error_print(void)
+void tokenizer_error_print(VARIABLE_TYPE token)
 {
-  // printf("%s", string);
-  print_serial("Err:");
-  print_serial((char*)ptr);
+  char msg[10];
+  if (ubasic_status.bit.isRunning == 1)
+  {
+    print_serial("Line ");
+    sprintf(msg,"%d:", current_linenum);
+    print_serial(msg);
+  }
+  print_serial("Err");
+  sprintf(msg,"[%02x]:", (uint8_t) token);
+  print_serial(msg);
+  print_serial((char*)ptr-1);
+  print_serial("\n");
 }
 /*---------------------------------------------------------------------------*/
 uint8_t tokenizer_finished(void)
 {
-  return *ptr == 0 || current_token == TOKENIZER_ENDOFINPUT;
+  if (ubasic_status.bit.isRunning == 1)
+    return ((*ptr == 0) || (current_token == TOKENIZER_ENDOFINPUT));
+
+  return ((*ptr == 0) || (current_token == TOKENIZER_ENDOFINPUT) || (ubasic_status.bit.Error == 1));
 }
 /*---------------------------------------------------------------------------*/
 uint8_t tokenizer_variable_num(void)
 {
-  return *ptr - 'a';
+  if ((*ptr >= 'a' && *ptr <= 'z'))
+  return (((uint8_t) *ptr) - 'a');
 }
 /*---------------------------------------------------------------------------*/

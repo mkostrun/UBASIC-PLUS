@@ -46,9 +46,10 @@
 
 #include "config.h"
 
-void ubasic_init(const char *program);
-void ubasic_var_init();
-void ubasic_run(void);
+void ubasic_load_program(const char *program);
+void ubasic_clear_variables();
+void ubasic_run_program(void);
+uint8_t ubasic_execute_statement(char * statement);
 uint8_t ubasic_finished(void);
 
 VARIABLE_TYPE ubasic_get_variable(uint8_t varnum);

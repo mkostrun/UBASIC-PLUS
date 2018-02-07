@@ -37,7 +37,9 @@
   * uBASIC Global and Exported Variables: Start
   * 
   */
-uint8_t ubasic_script_ended;
+volatile _Status ubasic_status;
+uint8_t   input_how=0;
+
 /**
  * uBASIC Global and Exported Variables: End
  *
@@ -68,7 +70,8 @@ static uint8_t for_stack_ptr;
 VARIABLE_TYPE variables[MAX_VARNUM];
 
 static VARIABLE_TYPE expr(void);
-static void line_statement(void);
+uint16_t current_linenum=0;
+static void numbered_line_statement(void);
 static void statement(void);
 static char string[MAX_STRINGLEN];
 
@@ -91,14 +94,13 @@ static uint8_t sinstr(uint16_t, char*, char*);
 #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
 static uint8_t input_varnum;
 static uint8_t input_type;
-volatile uint8_t sleep_for_input=0;
 #if defined(VARIABLE_TYPE_ARRAY)
 VARIABLE_TYPE  input_array_index;
 #endif
 #endif
 
 /*---------------------------------------------------------------------------*/
-void ubasic_var_init()
+void ubasic_clear_variables()
 {
   uint16_t i;
   for (i=0; i<MAX_VARNUM; i++)
@@ -126,22 +128,32 @@ void ubasic_var_init()
 }
 
 /*---------------------------------------------------------------------------*/
-void ubasic_init(const char *program)
+void ubasic_load_program(const char *program)
 {
   program_ptr = program;
   for_stack_ptr = gosub_stack_ptr = 0;
   tokenizer_init(program);
-  ubasic_script_ended = 0;
+  ubasic_status.bit.isRunning = 1;
 }
 /*---------------------------------------------------------------------------*/
-static void accept(int token)
+static uint8_t accept(VARIABLE_TYPE token)
 {
+
   if(token != tokenizer_token())
   {
-    tokenizer_error_print();
-    exit(1);
+    print_serial("Accept:");
+    char msg[32];
+    sprintf(msg,"%02x\n",TOKENIZER_EQ);
+    print_serial(msg);
+
+    tokenizer_error_print(token);
+    ubasic_status.bit.isRunning = 0;
+    ubasic_status.bit.Error = 1;
+    return 1;
   }
+
   tokenizer_next();
+  return 0;
 }
 // string additions
 
@@ -168,7 +180,8 @@ uint8_t string_space_check(uint16_t l)
   i = ((MAX_BUFFERLEN - freebufptr) <= (l + 2)); // +2 to play it safe
   if (i)
   {
-    ubasic_script_ended = 1;
+    ubasic_status.bit.isRunning = 0;
+    ubasic_status.bit.Error = 1;
   }
   return i;
 }
@@ -763,6 +776,10 @@ static VARIABLE_TYPE factor(void)
       break;
 #endif
 
+    case TOKENIZER_INT:
+      r = tokenizer_int();
+      accept(TOKENIZER_INT);
+      break;
 
     case TOKENIZER_NUMBER:
       r = tokenizer_num();
@@ -876,8 +893,10 @@ static VARIABLE_TYPE expr(void)
   VARIABLE_TYPE t1, t2;
   t1 = term();
   uint8_t op = tokenizer_token();
-  while(op == TOKENIZER_PLUS || op == TOKENIZER_MINUS || op == TOKENIZER_AND
-        || op == TOKENIZER_OR)
+  while( op == TOKENIZER_PLUS ||
+         op == TOKENIZER_MINUS ||
+         op == TOKENIZER_AND ||
+         op == TOKENIZER_OR)
   {
     tokenizer_next();
     t2 = term();
@@ -1067,6 +1086,7 @@ static void goto_statement(void)
 
 static void print_statement(uint8_t println)
 {
+  uint8_t print_how=0; /*0-xp, 1-hex, 2-oct, 3-dec, 4-bin*/
   // string additions
   if (println)
     accept(TOKENIZER_PRINTLN);
@@ -1075,6 +1095,17 @@ static void print_statement(uint8_t println)
 
   do
   {
+    if (tokenizer_token() == TOKENIZER_PRINT_HEX)
+    {
+      tokenizer_next();
+      print_how = 1;
+    }
+    else if (tokenizer_token() == TOKENIZER_PRINT_DEC)
+    {
+      tokenizer_next();
+      print_how = 2;
+    }
+
 #if defined(VARIABLE_TYPE_STRING)
     if(tokenizer_token() == TOKENIZER_STRING)
     {
@@ -1098,12 +1129,22 @@ static void print_statement(uint8_t println)
       else
 #endif
       {
+        if (print_how == 1)
+        {
+          sprintf(string, "%lx", (uint32_t) expr());
+        }
+        else if (print_how == 2)
+        {
+          sprintf(string, "%ld", expr());
+        }
+        else
+        {
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-        fixedpt_str(expr(), string, FIXEDPT_FBITS/3 );
+          fixedpt_str(expr(), string, FIXEDPT_FBITS/3 );
 #else
-        sprintf(string, "%d", expr());
+          sprintf(string, "%ld", expr());
 #endif
-
+        }
       }
     // end of string additions
     }
@@ -1159,7 +1200,8 @@ static void let_statement(void)
   {
     varnum = tokenizer_variable_num();
     accept(TOKENIZER_VARIABLE);
-    accept(TOKENIZER_EQ);
+    if (accept(TOKENIZER_EQ))
+      return;
     ubasic_set_variable(varnum, expr());
   }
 #if defined(VARIABLE_TYPE_STRING)
@@ -1168,7 +1210,8 @@ static void let_statement(void)
   {
     varnum = tokenizer_variable_num();
     accept(TOKENIZER_STRINGVARIABLE);
-    accept(TOKENIZER_EQ);
+    if (accept(TOKENIZER_EQ))
+      return;
     ubasic_set_stringvariable(varnum, sexpr());
   }
   // end of string additions
@@ -1185,7 +1228,8 @@ static void let_statement(void)
     idx = fixedpt_toint( idx );
   #endif
     accept(TOKENIZER_RIGHTPAREN);
-    accept(TOKENIZER_EQ);
+    if (accept(TOKENIZER_EQ))
+      return;
     VARIABLE_TYPE r = expr();
     ubasic_set_arrayvariable(varnum, (uint16_t) idx, r);
   }
@@ -1235,9 +1279,12 @@ static void gosub_statement(void)
     gosub_stack[gosub_stack_ptr] = (uint16_t) tokenizer_num();
     gosub_stack_ptr++;
     jump_linenum(linenum);
+    return;
   }
-  else
-    exit(1);
+
+  tokenizer_error_print(TOKENIZER_GOSUB);
+  ubasic_status.bit.isRunning = 0;
+  ubasic_status.bit.Error = 1;
 }
 /*---------------------------------------------------------------------------*/
 static void return_statement(void)
@@ -1247,11 +1294,12 @@ static void return_statement(void)
   {
     gosub_stack_ptr--;
     jump_linenum(gosub_stack[gosub_stack_ptr]);
+    return;
   }
-  else
-  {
-    exit(1);
-  }
+
+  tokenizer_error_print(TOKENIZER_RETURN);
+  ubasic_status.bit.isRunning = 0;
+  ubasic_status.bit.Error = 1;
 }
 /*---------------------------------------------------------------------------*/
 static void next_statement(void)
@@ -1313,11 +1361,12 @@ static void for_statement(void)
     for_stack[for_stack_ptr].for_variable = for_variable;
     for_stack[for_stack_ptr].to = to;
     for_stack_ptr++;
+    return;
   }
-  else
-  {
-    exit(1);
-  }
+
+  tokenizer_error_print(TOKENIZER_FOR);
+  ubasic_status.bit.isRunning = 0;
+  ubasic_status.bit.Error = 1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1325,7 +1374,8 @@ static void for_statement(void)
 static void end_statement(void)
 {
   accept(TOKENIZER_END);
-  ubasic_script_ended = 1;
+  ubasic_status.bit.isRunning = 0;
+  ubasic_status.bit.Error = 0;
 }
 
 #if defined(UBASIC_SCRIPT_HAVE_SLEEP)
@@ -1377,7 +1427,19 @@ static void tic_statement(void)
 #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
 static void input_statement_wait (void)
 {
+  input_how = 0;
   accept(TOKENIZER_INPUT);
+  
+  if (tokenizer_token() == TOKENIZER_PRINT_HEX)
+  {
+    tokenizer_next();
+    input_how = 1;
+  }
+  else if (tokenizer_token() == TOKENIZER_PRINT_DEC)
+  {
+    tokenizer_next();
+    input_how = 2;
+  }
 
   if (tokenizer_token() == TOKENIZER_VARIABLE)
   {
@@ -1430,7 +1492,7 @@ static void input_statement_wait (void)
 
   accept_cr();
 
-  sleep_for_input=1;
+  ubasic_status.bit.WaitForSerialInput = 1;
 }
 
 static void serial_input_completed(void)
@@ -1446,12 +1508,20 @@ static void serial_input_completed(void)
   #endif
       )
     {
+      VARIABLE_TYPE r;
+      if ((input_how == 1)||(input_how == 2))
+      {
+        r = atoi(string);
+      }
+      else
+      {
       // process number
-  #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-      VARIABLE_TYPE r = str_fixedpt(string,MAX_STRINGLEN,FIXEDPT_FBITS>>1);
-  #else
-      VARIABLE_TYPE r = atoi(buf);
-  #endif
+#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+        r = str_fixedpt(string,MAX_STRINGLEN,FIXEDPT_FBITS>>1);
+#else
+        r = atoi(string);
+#endif
+      }
 
       if (input_type == 0)
       {
@@ -1472,7 +1542,7 @@ static void serial_input_completed(void)
   #endif 
   }
 
-  sleep_for_input=0;
+  ubasic_status.bit.WaitForSerialInput = 0;
 }
 
 #endif /* #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL) */
@@ -1482,6 +1552,9 @@ static void statement(void)
 {
   uint8_t token = tokenizer_token();
   uint8_t println=0;
+
+  if (ubasic_status.bit.Error)
+    return;
 
   switch(token)
   {
@@ -1571,28 +1644,34 @@ static void statement(void)
 #endif
 
     default:
-      exit(1);
+      tokenizer_error_print(TOKENIZER_ERROR);
+      ubasic_status.bit.isRunning = 0;
+      ubasic_status.bit.Error = 1;
+      print_serial("Done:default!\n");
   }
 }
 /*---------------------------------------------------------------------------*/
-static void line_statement(void)
+static void numbered_line_statement(void)
 {
-  /*    current_linenum = tokenizer_num();*/
+  current_linenum = tokenizer_num();
   accept(TOKENIZER_NUMBER);
   statement();
   return;
 }
 
 /*---------------------------------------------------------------------------*/
-void ubasic_run(void)
+void ubasic_run_program(void)
 {
+  if (ubasic_status.bit.isRunning==0)
+    return;
+
 #if defined(UBASIC_SCRIPT_HAVE_SLEEP)
   if (ubasic_script_sleeping_ms)
     return;
 #endif
 
 #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
-  if (sleep_for_input)
+  if (ubasic_status.bit.WaitForSerialInput)
   {
     if (serial_input_available()==0)
     {
@@ -1614,14 +1693,56 @@ void ubasic_run(void)
   // end of string additions
 #endif
 
-  line_statement();
+  numbered_line_statement();
+}
+
+/*---------------------------------------------------------------------------*/
+uint8_t ubasic_execute_statement(char * stmt)
+{
+  ubasic_status.byte= 0;
+
+  program_ptr = stmt;
+  for_stack_ptr = gosub_stack_ptr = 0;
+  tokenizer_init(stmt);
+
+  do
+  {
+#if defined(VARIABLE_TYPE_STRING)
+    garbage_collect();
+#endif
+
+    statement();
+
+    if (ubasic_status.bit.Error)
+      break;
+
+#if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
+    while (ubasic_status.bit.WaitForSerialInput)
+    {
+      if (serial_input_available()==0)
+      {
+        if (ubasic_script_wait_for_input_ms > 0)
+          continue;
+      }
+      serial_input_completed();
+    }
+#endif
+
+#if defined(UBASIC_SCRIPT_HAVE_SLEEP)
+    while (ubasic_script_sleeping_ms);
+#endif
+
+  }
+  while (!tokenizer_finished());
+
+  return ubasic_status.byte;
 }
 
 /*---------------------------------------------------------------------------*/
 
 uint8_t ubasic_finished(void)
 {
-  return (ubasic_script_ended || tokenizer_finished());
+  return (tokenizer_finished() || ubasic_status.bit.isRunning == 0 );
 }
 
 /*---------------------------------------------------------------------------*/

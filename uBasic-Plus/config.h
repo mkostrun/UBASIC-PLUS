@@ -115,9 +115,12 @@
 
 
 
-/* Selectively load header files based on the ocnfiguration above.
-   Remember MC Hammer: CAN'T TOUCH THIS!
-  */
+/*
+ * Selectively load header files based on the ocnfiguration above.
+ * Remember MC Hammer:
+ *                      CAN'T TOUCH THIS!
+ *
+ */
 #if defined(VARIABLE_STORAGE_INT32)
 
   #define VARIABLE_TYPE int32_t
@@ -151,6 +154,26 @@
 
 #endif
 
+#define UBASIC_STATUS_RUN   0x80
+#define UBASIC_STATUS_MASK_NOT_RUNNING 0x7f
+#define UBASIC_STATUS_IDLE  0x00
+
+/* define a structure with bit fields */
+typedef union
+{
+  uint8_t byte;
+  struct
+  {
+    uint8_t bit0 : 1;
+    uint8_t bit1 : 1;
+    uint8_t bit2 : 1;
+    uint8_t bit3 : 1;
+    uint8_t bit4 : 1;
+    uint8_t WaitForSerialInput : 1;
+    uint8_t Error       : 1;
+    uint8_t isRunning   : 1;
+  } bit;
+} _Status;
 
 #define MAX_STRINGLEN     40
 

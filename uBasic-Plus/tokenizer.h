@@ -99,6 +99,8 @@ enum {
   TOKENIZER_NE,
   TOKENIZER_GE,
   TOKENIZER_LE,
+  TOKENIZER_PRINT_HEX,
+  TOKENIZER_PRINT_DEC,
 #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
   TOKENIZER_INPUT,
 #endif
@@ -120,6 +122,7 @@ enum {
 #endif
 #endif
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+  TOKENIZER_INT,
   TOKENIZER_FLOAT,
   TOKENIZER_SQRT,
   TOKENIZER_SIN,
@@ -150,6 +153,7 @@ void tokenizer_init(const char *program);
 void tokenizer_next(void);
 uint8_t tokenizer_token(void);
 VARIABLE_TYPE tokenizer_num(void);
+VARIABLE_TYPE tokenizer_int(void);
 
 #ifdef FIXEDPT_FBITS
 VARIABLE_TYPE tokenizer_float(void);
@@ -158,7 +162,7 @@ VARIABLE_TYPE tokenizer_float(void);
 uint8_t tokenizer_variable_num(void);
 
 uint8_t tokenizer_finished(void);
-void tokenizer_error_print(void);
+void tokenizer_error_print(VARIABLE_TYPE token);
 
 #if defined(VARIABLE_TYPE_STRING)
 void tokenizer_string(char *dest, uint8_t len);
