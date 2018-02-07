@@ -82,6 +82,28 @@ and accessed through index, e.g., a@(i)
       direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
 - *hw_event(channel)*
       access to flags that can be set outside BASIC interpreter, e.g., using interrupts, that are available to BASIC scripts for flow control.
+- *UBASIC-PLUS* can be used as direct command interpreter for quick computations or setting the state of the hardware.
+  ```
+  ... gpio(1,1)
+  ```
+  will set the channel 1 gpio to 1 from the command line.
+- *does not fit in anything above*
+  ```
+  ... println [hex,dec] x 
+  ```
+  will print *x* as hexadecimal integer, decimal integer, or as a fixed point number.
+  ```
+  ... x = 0xaabbccdd
+  ```
+  or
+  ```
+  ... x = 123456[d,D,L,l]
+  ```
+  will define *true* x as given and not convert it to fixed point integer.
+
+  
+
+
 
 
 The uBasic-Plus comprise of six files config.h, fixedptc.h, tokenizer.c,
@@ -256,7 +278,7 @@ About the board:
 About the board:
 - Arm Cortex M0 64kb flash, 8kb ram, 48MHz frequency
 - GPIO: PC0, PC1, PC2, PC3
-- PWM:  Timer 3 Channels 1 (PA6), 2 (PA7), 3 (PB0) and 4 (PB1)
+- PWM:  Timer 3 Channels 1 (PC6/LED1), 2 (PC7/LED2), 3 (PC8) and 4 (PC9)
 - Hardware Events:
   - Push Button 1 (PA0) with two events:
     - button pressed - hw_event(1), and
