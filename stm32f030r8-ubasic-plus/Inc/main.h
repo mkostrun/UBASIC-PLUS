@@ -41,10 +41,11 @@
 
 /* USER CODE BEGIN Includes */
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
+#include <stdlib.h>
+#include "cube_hal.h"
 /* USER CODE END Includes */
 
-/* Private define ------------------------------------------------------------*/
-#undef UBASIC_SCRIPT_HAVE_TIM3_PWM
 
 /* ########################## Assert Selection ############################## */
 /**
@@ -52,9 +53,6 @@
   *        HAL drivers code
   */
 #define USE_FULL_ASSERT    1U
-
-/* USER CODE BEGIN Private defines */
-#define UBASIC_SCRIPT_HAVE_TIM3_PWM
 
 /* USER CODE END Private defines */
 

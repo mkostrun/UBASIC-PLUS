@@ -44,7 +44,6 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "cube_hal.h"
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
@@ -66,7 +65,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef* pUARTHandle);
 uint8_t UART2_Transmit(uint8_t * message, uint16_t lenmsg);
 /* USER CODE END Prototypes */
 
+void USART2_IRQHandler(void);
 void print_serial(char * msg);
+uint8_t serial_input_available(void);
+uint8_t serial_input (char * buffer, uint8_t len);
 
 #ifdef __cplusplus
 }
