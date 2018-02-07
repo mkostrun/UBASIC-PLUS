@@ -100,6 +100,7 @@ and accessed through index, e.g., a@(i)
   ... x = 123456[d,D,L,l]
   ```
   will define *true* x as given and not convert it to fixed point integer.
+  Binary format '0b' can be input as well.
 
   
 
@@ -250,6 +251,10 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 ```
 
 ## UBASIC PLUS HARDWARE IMPLEMENTATION EXAMPLES
+
+For both boards a TX with circular buffer was implemented and tested.
+These files are provided in the Drivers/HAL.. directory and are the
+same for both boards.
 
 
 ### STM32F030R8-Nucleo64
