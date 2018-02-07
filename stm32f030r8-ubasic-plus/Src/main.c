@@ -37,11 +37,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include <string.h>
-#include "cube_hal.h"
 #include "main.h"
-#include "stm32f0xx_hal.h"
-#include "stm32f0xx_hal_conf.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -102,12 +98,12 @@ static const char *program[] = {
 12 println 'i=',i;\
 13 gosub 100;\
 14 next i;\
-15 j=1.79;\
+15 j=uniform;\
 16 println 'j=' j;\
 50 println 'end of test 3';\
 60 end;\
 100 println 'subroutine - sleep';\
-101 sleep(1);\
+101 sleep(0.5);\
 102 return;",
 
 "\
@@ -219,6 +215,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t counter=0;
   uint32_t time_last_ms = HAL_GetTick();
+  char statement[64];
   /* USER CODE END 1 */
 
   /* BASIC VARS BEGIN */
@@ -249,26 +246,38 @@ int main(void)
   /* Initialize Push Button - see also sw.c */
   BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_EXTI);
 
-  /**
-    *   basic welcome message
-    */
   for (uint8_t i=0; i<1; i++)
   {
-    ubasic_init( program[3] );
-    ubasic_var_init();
+    ubasic_load_program( program[2] );
+    ubasic_clear_variables();
     do
     {
-      ubasic_run();
+      ubasic_run_program();
     }
     while(!ubasic_finished());
   }
 
+  /* USER CODE BEGIN WHILE */
+  ubasic_clear_variables();
+  print_serial(">");
+
+  /* Infinite loop */
   while (1)
   {
-    /**
-      *   basic interpreter
-      */
-  } /* while (1) */
+    /* USER CODE END WHILE */
+  
+    /* USER CODE BEGIN 3 */
+    // UART2/RX echo on TX and print onto PLC line:
+    if (serial_input_available())
+    {
+      serial_input(statement,sizeof(statement));
+      print_serial(statement);
+      print_serial("\n");
+      ubasic_execute_statement(statement);
+      print_serial(">");
+    }
+
+  }
 
 } /* main() */
 

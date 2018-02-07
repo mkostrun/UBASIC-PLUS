@@ -1,7 +1,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32f0xx_hal.h"
 
 int8_t digio_out_ch[4] = {-1,-1,-1,-1};
 int8_t digio_in_ch[4] = {-1,-1,-1,-1};

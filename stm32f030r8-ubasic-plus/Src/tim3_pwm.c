@@ -39,7 +39,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32f0xx_hal.h"
 
 /* USER CODE BEGIN 0 */
 #define TIM3_PWM1_PSC 16

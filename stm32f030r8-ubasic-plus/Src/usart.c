@@ -38,13 +38,11 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include <string.h>
-#include "cube_hal.h"
 #include "main.h"
-#include "gpio.h"
 
 /* USER CODE BEGIN 0 */
 /* USER CODE END 0 */
+#define SERIAL_WAITTIME_MS  (20)
 
 UART_HandleTypeDef huart2;
 __IO ITStatus UART_TX_Completed=RESET, UART_RX_Available=RESET;
@@ -157,29 +155,28 @@ void USART2_IRQHandler(void)
   /* USER CODE END USART2_IRQn 1 */
 }
 
-
 void print_serial(char * msg)
 {
   UART2_Transmit((uint8_t*) msg, strlen(msg));
   while (UART_TX_Completed==RESET);
 }
 
-uint8_t serial_input_available(uint16_t timeout)
+uint8_t serial_input_available(void)
 {
   uint8_t n = HAL_UART_Cir_Available_IT(&huart2);
 
   if (!n)
     return 0;
 
-  if (HAL_UART_Cir_Last_Time_IT(&huart2)<timeout)
+  if (HAL_UART_Cir_Last_Time_IT(&huart2)<SERIAL_WAITTIME_MS)
     return 0;
 
   return n;
 }
 
-uint8_t serial_input (char * buffer, uint8_t len, uint16_t timeout)
+uint8_t serial_input (char * buffer, uint8_t len)
 {
-  uint8_t n = serial_input_available(timeout);
+  uint8_t n = serial_input_available();
   if (!n)
     return 0;
 
@@ -201,7 +198,6 @@ uint8_t serial_input (char * buffer, uint8_t len, uint16_t timeout)
 
   return i;
 }
-
 
 
 /**

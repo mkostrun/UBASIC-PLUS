@@ -4,7 +4,7 @@
  *  Created on: Jan 30, 2018
  *      Author: mk
  */
-#include "cube_hal.h"
+#include "main.h"
 
 __IO uint8_t pb_status=0, hw_event=0;
 
