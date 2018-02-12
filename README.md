@@ -180,34 +180,34 @@ end;
 println 'start of test 3';
 tic(1);
 for i = 1 to 2;
-j = i + 0.25 + 1/2;
-println 'j=' j;
-k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j);
-println 'k=' k;
+  j = i + 0.25 + 1/2;
+  println 'j=' j;
+  k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j);
+  println 'k=' k;
 next i;
 :repeat \
 if toc(1)<=300 then goto repeat;
 for i = 1 to 2;
-println 'ran(' i ')=' ran;
+  println 'ran(' i ')=' ran;
 next i;
 for i = 1 to 2;
-println 'uniform(' i ')=' uniform;
+  println 'uniform(' i ')=' uniform;
 next i;
 for i = 1 to 2;
-x = 10 * uniform;
-println 'x=' x;
-println 'floor(x)=' floor(x);
-println 'ceil(x)=' ceil(x);
-println 'round(x)=' round(x);
-println 'x^3=' pow(x,3);
+  x = 10 * uniform;
+  println 'x=' x;
+  println 'floor(x)=' floor(x);
+  println 'ceil(x)=' ceil(x);
+  println 'round(x)=' round(x);
+  println 'x^3=' pow(x,3);
 next i;
 println 'Analog Write Test';
 for i = 1 to 5;
-for j = 1 to 4;
-pwm(j,4095*uniform);
-next j;
-sleep(0.5);
-println 'pwm=' pwm(1),pwm(2),pwm(3),pwm(4);
+  for j = 1 to 4;
+    pwm(j,4095*uniform);
+  next j;
+  sleep(0.5);
+  println 'pwm=' pwm(1),pwm(2),pwm(3),pwm(4);
 next i;
 pwm(1,0);
 pwm(2,0);
@@ -215,19 +215,19 @@ pwm(3,0);
 pwm(4,0);
 println 'GPIO 1:4 Test';
 for i = 1 to 1;
-for j = 0 to 2;
-gpio(i,(j % 2));
-sleep(0.5);
-next j;
+  for j = 0 to 2;
+    gpio(i,(j % 2));
+    sleep(0.5);
+  next j;
 next i;
 println 'gpio(1)=' gpio(1);
 println 'gpio(2)=' gpio(2);
 println 'Press the Blue Button!';
-  :presswait \
+:presswait \
 if hw_event(1)=0 then goto presswait;
 tic(1);
 println 'Blue Button pressed!';
-  :deprwait \
+:deprwait \
 if hw_event(2)=0 then goto deprwait;
 println 'duration =' toc(1);
 println 'Blue Button de-pressed!';
@@ -240,12 +240,12 @@ end;
 println 'start of test 4';
 dim a@(5);
 for i = 1 to 5;
-print '?';
-input a@(i),10000;
+  print '?';
+  input a@(i),10000;
 next i;
 println 'end of input';
 for i = 1 to 5;
-println 'a(' i ') = ' a@(i);
+  println 'a(' i ') = ' a@(i);
 next i;
 println 'end of test 4';
 end
@@ -273,7 +273,7 @@ end;
 
 ### 6th example - if/then/else/endif and while/endwhile
 ```
-println 'start of test 7';
+println 'start of test 6';
 println 'Test If:';
 for i=1 to 10 step 0.125;
   x = uniform;
@@ -289,6 +289,7 @@ while i>=0;
   i = i - 0.125;
   println 'i =', i;
 endwhile;
+println 'end of test 6';
 end
 ```
 
