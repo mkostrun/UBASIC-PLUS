@@ -48,7 +48,7 @@ available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasi
 
 ## UBASIC PLUS
 
-uBasic Plus is combines 'uBasic with strings' with elements of 'CHDK' version of uBasic.
+uBasic Plus combines 'uBasic with strings' with elements of 'CHDK' version of uBasic.
 It adds the following functionalities:
 - config.h, configuration which allows user to select which features they want
 in their uBasic build
