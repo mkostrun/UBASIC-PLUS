@@ -41,6 +41,7 @@
 
 /* USER CODE BEGIN Includes */
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include "cube_hal.h"
@@ -53,6 +54,28 @@
   *        HAL drivers code
   */
 #define USE_FULL_ASSERT    1U
+
+/* USER CODE BEGIN Private defines */
+#undef USE_CRC_FOR_RANDOM_NUMBER_GENERATION
+
+/* define a structure with bit fields */
+typedef union
+{
+  uint8_t byte;
+  struct
+  {
+    uint8_t bit0 : 1; /* ADC initialized */
+    uint8_t bit1 : 1;
+    uint8_t bit2 : 1;
+    uint8_t bit3 : 1;
+    uint8_t bit4 : 1;
+    uint8_t bit5 : 1;
+    uint8_t bit6 : 1;
+    uint8_t bit7 : 1;
+  } bit;
+} _MainStatus;
+
+extern _MainStatus main_status;
 
 /* USER CODE END Private defines */
 
