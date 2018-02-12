@@ -42,6 +42,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include "stm32f0xx_hal.h"
@@ -49,6 +50,7 @@
 
 /* Private define ------------------------------------------------------------*/
 #define USE_STM32F0XX_DISCOVERY
+
 #define LD4_Pin GPIO_PIN_8
 #define LD4_GPIO_Port GPIOC
 #define LD3_Pin GPIO_PIN_9
@@ -72,6 +74,24 @@
  #define USE_FULL_ASSERT    1U 
 
 /* USER CODE BEGIN Private defines */
+/* define a structure with bit fields */
+typedef union
+{
+  uint8_t byte;
+  struct
+  {
+    uint8_t bit0 : 1; /* ADC initialized */
+    uint8_t bit1 : 1;
+    uint8_t bit2 : 1;
+    uint8_t bit3 : 1;
+    uint8_t bit4 : 1;
+    uint8_t bit5 : 1;
+    uint8_t bit6 : 1;
+    uint8_t bit7 : 1;
+  } bit;
+} _MainStatus;
+
+extern _MainStatus main_status;
 
 /* USER CODE END Private defines */
 
