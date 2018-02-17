@@ -61,7 +61,7 @@ are very fast as there are no line searches.
 
 - Strings can be encompassed by single or double quotations. Tokenizer can identify labels.
 
-- End of line characters * '\n' * and * ';' *
+- End of line characters *'\n'* and *';'*
 
 - config.h , configuration which allows user to select which of the features below
 (if any) they want in their uBasic build.
