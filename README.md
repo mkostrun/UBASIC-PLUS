@@ -63,7 +63,7 @@ are very fast as there are no line searches.
 
 - End of line characters *'\n'* and *';'*
 
-- config.h , configuration which allows user to select which of the features below
+- config.h , allows user to select which of the features below
 (if any) they want in their uBasic build.
 
 - Fixep point floats are implemented through Fixed Point Math Library for C
@@ -76,10 +76,18 @@ The libary is enhanced with str_fixedpt function, which converts a string to fix
   - multi-line If/then/else/endif-command (CHDK-style)
   - while/endwhile
 
+- 26 fixed point arrays, a@ to z@, dynamically allocated using DIM command,
+```
+dim a@(5);
+for i = 1 to 5;
+  input a@(i),10000;
+next i;
+```
+
+
 - println
       at the end of printout add an empty line '\n'
-- 26 fixed point arrays, named a@ to z@, dynamically allocated using DIM command,
-and accessed through index, e.g., a@(i)
+
 - *sleep(f)*,
       where f is fixed point number in seconds. sleep is NOT executed inside the BASIC interpreter
 - *input {a,a$,a@(i)}, timeout*
