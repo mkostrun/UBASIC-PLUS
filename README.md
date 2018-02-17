@@ -76,10 +76,11 @@ The libary is enhanced with str_fixedpt function, which converts a string to fix
   - multi-line If/then/else/endif-command (CHDK-style)
   - while/endwhile
 
-- *input {a,a$,a@(i)}, timeout*
+- *input {a,a$,a@(i)}, timeout_ms*
 
-   wait until timeout for input through serial port, external functions for serial-availabe
-and serial-read have to be supplied - see documentation in *config.h*
+   wait at most until *timeout_ms* for input from the serial port.
+Relies on external functions for serial-available and serial-read to be supplied as
+documented in *config.h*
 
 
 - 26 fixed point arrays, a@ to z@, dynamically allocated using DIM command,
@@ -110,7 +111,11 @@ as hex values,
 - *println*
 
   Same as *print* but adds an empty line at the end. Additional identifiers *hex* or *dec*
-can be used to print the number as (hex)adecimal if fixed point floats are not desired.
+can be used to print the number as (hex)adecimal if fixed point floats are not desired, as
+in this example:
+  ```
+  ... println [hex,dec] x 
+  ```
 
 - *sleep(f)*
 
@@ -165,12 +170,6 @@ available.
 - *does not fit in anything above*
 
 
-  The values can be printed directly as
-  ```
-  ... println [hex,dec] x 
-  ```
-  that is, as hexadecimal or decimal integer, if default printout,
-  that of fixed point integer, is not needed.
 
 
 
