@@ -50,7 +50,10 @@ available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasi
 
 uBasic Plus combines 'uBasic with strings' with elements of 'CHDK' version of uBasic.
 For CHDK please see http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
-It adds the following functionalities:
+
+
+uBasic Plus features:
+
 
 - No more line numbers:
 Instead CHDK-style labels are used, *:some_label* . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
