@@ -76,6 +76,11 @@ The libary is enhanced with str_fixedpt function, which converts a string to fix
   - multi-line If/then/else/endif-command (CHDK-style)
   - while/endwhile
 
+- *input {a,a$,a@(i)}, timeout*
+
+   wait until timeout for input through serial port, external functions for serial-availabe and serial-read have to be supplied - see documentation in config.h
+
+
 - 26 fixed point arrays, a@ to z@, dynamically allocated using DIM command,
 ```
 dim a@(5);
@@ -90,8 +95,6 @@ next i;
 
 - *sleep(f)*,
       where f is fixed point number in seconds. sleep is NOT executed inside the BASIC interpreter
-- *input {a,a$,a@(i)}, timeout*
-      wait until timeout for input through serial port, external functions for serial-availabe and serial-read have to be supplied - see documentation in config.h
 - ran
       system random number generator based on the external function - see documentation in config.h
 - *tic(n), a=toc(n)*
