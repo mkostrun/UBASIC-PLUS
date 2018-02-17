@@ -92,30 +92,54 @@ and serial-read have to be supplied - see documentation in *config.h*
   In this example code expects 5 array entries to be entered through serial port, and
 waits at most 10sec for each input to complete.
 
-- println
+- *println*
+
   Same as *print* but adds an empty line at the end.
 
-- *sleep(f)*,
-      where f is fixed point number in seconds. sleep is NOT executed inside the BASIC interpreter
+- *sleep(f)*
+
+  wait *f* seconds, which can be fixed point float.
+This is not executed inside the BASIC interpreter.
+
 - ran
-      system random number generator based on the external function - see documentation in config.h
+
+  system random number generator based on the external function - see documentation in config.h
+
 - *tic(n), a=toc(n)*
-      rlabplus-type six timers for measuring the passed time from different breakpoints in the script
+
+  rlabplus-type six timers for measuring the passed time from different breakpoints in the script
+
 - *sqrt, sin, cos, tan, exp, ln, pow*
-      fixed point arithmetic single argument functions from fixed point math library
+
+  fixed point arithmetic single argument functions from fixed point math library
+
 - *floor, ceil, round, abs*
-      fixed point float to fixed point integer arithmetic functions
+
+  fixed point float to fixed point integer arithmetic functions
+
 - *uniform*
-      system fixed point random number generator in the range 0.000 to 0.999.
+
+  system fixed point random number generator in the range 0.000 to 0.999.
+
 - *gpio(pin,state), a=gpio(pin)*
-      direct control over digital pins. Tied to hardware specific functions as described in config.h
+
+  direct control over digital pins. Tied to hardware specific functions as described in config.h
+
+  
 - *pwm(channel,value), pwm(channel)*
-      direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
+
+  direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
+
 - *hw_event(channel)*
-      access to flags that can be set outside BASIC interpreter, e.g., using interrupts, that are available to BASIC scripts for flow control.
+
+  access to flags that can be set outside BASIC interpreter, e.g., using interrupts, that are available to BASIC scripts for flow control.
+
 - *aread(channel)*
-      read input from analog channels 0:18 on the microcontroller. However, only some of the channels might be
-      available.
+
+  read input from analog channels 0:18 on the microcontroller. However, only some of the channels might be
+available.
+
+
 - *UBASIC-PLUS* can be used as direct command interpreter for quick computations or setting the state of the hardware.
 
   ```
