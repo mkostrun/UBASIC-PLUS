@@ -53,7 +53,7 @@ For CHDK please see http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Pa
 It adds the following functionalities:
 
 - No more line numbers:
-Instead CHDK-style labels are used, *  :some_label  * . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
+Instead CHDK-style labels are used, *:some_label* . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
 inside quotation marks. Labels can use '_' in their names.
 Also, internally the lines are not numbered,
 rather pointers are used, so returns - from gosub, for/next, if/then/else, while/endwhile -
@@ -63,7 +63,7 @@ are very fast as there are no line searches.
 
 - End of line characters * '\n' * and * ';' *
 
-- * config.h *, configuration which allows user to select which of the features below
+- config.h , configuration which allows user to select which of the features below
 (if any) they want in their uBasic build.
 
 - Fixep point floats are implemented through Fixed Point Math Library for C
