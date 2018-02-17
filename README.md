@@ -160,7 +160,7 @@ Tied to hardware specific functions as described in *config.h* .
   direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
 
 
-- *hw_event(channel)*
+- *i = hw_event(channel)*
 
   Allow flags that can be set outside BASIC interpreter, e.g., using interrupts,
 to be used in flow control.
@@ -173,24 +173,11 @@ gets set by external process. Importantly, after the interpreter recognizes that
 flag has been set, it immediately resets it so the subsequent calls will return 0
 until the flag is set again externally.
 
-- *aread(channel)*
+- *i = aread(channel)*
 
-  read input from analog channels 0:18 on the microcontroller. However, only some of the channels might be
-available.
-
-
-- *UBASIC-PLUS* can be used as direct command interpreter for quick computations or setting the state of the hardware.
-
-  ```
-  ... gpio(1,1)
-  ```
-  will set the channel 1 gpio to 1 from the command line.
-- *does not fit in anything above*
-
-
-
-
-
+  Read input from analog channels 0:18 from the microcontroller. The pin assignments of
+the analog inputs for some microcontrollers is given in hardware examples below.
+Some channels may not be available.
 
 
 The uBasic-Plus comprise of six files config.h, fixedptc.h, tokenizer.c,
