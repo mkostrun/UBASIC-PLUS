@@ -279,50 +279,50 @@ end;
 
 ### Demo 3 - uBasic-Plus is here
 ```
-println 'Demo 3 - Plus';\
-tic(1);\
-for i = 1 to 2;\
-  j = i + 0.25 + 1/2;\
-  println 'j=' j;\
-  k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j);\
-  println 'k=' k;\
-next i;\
+println 'Demo 3 - Plus'
+tic(1)
+for i = 1 to 2
+  j = i + 0.25 + 1/2
+  println 'j=' j
+  k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j)
+  println 'k=' k
+next i
   :repeat \
-if toc(1)<=300 then goto repeat;\
-for i = 1 to 2;\
-println 'ran(' i ')=' ran;\
-next i;\
-for i = 1 to 2;\
-println 'uniform(' i ')=' uniform;\
-next i;\
-for i = 1 to 2;\
-x = 10 * uniform;\
-println 'x=' x;\
-println 'floor(x)=' floor(x);\
-println 'ceil(x)=' ceil(x);\
-println 'round(x)=' round(x);\
-println 'x^3=' pow(x,3);\
-next i;\
-println 'GPIO 1:4 Test';\
-for i = 1 to 1;\
-for j = 0 to 2;\
-gpio(i,(j % 2));\
-sleep(0.5);\
-next j;\
-next i;\
-println 'gpio(1)=' gpio(1);\
-println 'gpio(2)=' gpio(2);\
-println 'Press the Blue Button or type kill!';\
+if toc(1)<=300 then goto repeat
+for i = 1 to 2
+println 'ran(' i ')=' ran
+next i
+for i = 1 to 2
+println 'uniform(' i ')=' uniform
+next i
+for i = 1 to 2
+x = 10 * uniform
+println 'x=' x
+println 'floor(x)=' floor(x)
+println 'ceil(x)=' ceil(x)
+println 'round(x)=' round(x)
+println 'x^3=' pow(x,3)
+next i
+println 'GPIO 1:4 Test'
+for i = 1 to 1
+for j = 0 to 2
+gpio(i,(j % 2))
+sleep(0.5)
+next j
+next i
+println 'gpio(1)=' gpio(1)
+println 'gpio(2)=' gpio(2)
+println 'Press the Blue Button or type kill!'
   :presswait \
-if hw_event(1)=0 then goto presswait;\
-tic(1);\
-println 'Blue Button pressed!';\
+if hw_event(1)=0 then goto presswait
+tic(1)
+println 'Blue Button pressed!'
   :deprwait \
-if hw_event(2)=0 then goto deprwait;\
-println 'duration =' toc(1);\
-println 'Blue Button de-pressed!';\
-println 'Demo 3 Completed';\
-end;",
+if hw_event(2)=0 then goto deprwait
+println 'duration =' toc(1)
+println 'Blue Button de-pressed!'
+println 'Demo 3 Completed'
+end
 ```
 
 ### Demo 4 - input array entries in 10 sec time
