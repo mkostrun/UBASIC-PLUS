@@ -38,13 +38,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "usart.h"
 #include "gpio.h"
+#include "../uBasic-Plus/hardware/usart.h"
+#include "../uBasic-Plus/hardware/random.h"
 
 /* USER CODE BEGIN Includes */
 #include "ubasic.h"
 
 /* Includes ------------------------------------------------------------------*/
+#include "cli.h"
+uint8_t cli_state=UBASIC_CLI_IDLE;
 
 /* Private variables ---------------------------------------------------------*/
 _MainStatus main_status = { .byte = 0x00 };
@@ -52,23 +55,21 @@ _MainStatus main_status = { .byte = 0x00 };
 static const char *program[] = {
 
 "\
-;\
-;\
-println 'start of test 1';\
+println 'Demo 1 - Warm-up';\
 gosub l1;\
 for i = 1 to 2;\
 for j = 1 to 2;\
 println 'i,j=',i,j;\
 next j;\
 next i;\
-println 'end of test 1';\
+println 'Demo 1 Completed';\
 end;\
 :l1 \
 println 'subroutine';\
 return;",
 
 "\
-println 'start of test 2';\
+println 'Demo 2 - ubasic with strings';\
 a$= 'abcdefghi';\
 b$='123456789';\
 println 'Length of a$=', len(a$);\
@@ -93,31 +94,16 @@ println val('12345');\
 i=instr(3, '123456789', '67');\
 println 'position of 67 in 123456789 is', i;\
 println mid$(a$,2,2)+'xyx';\
-println 'end of test 2';",
+println 'Demo 2 Completed';",
 
 "\
-println 'start of test 3';\
-for i = 1 to 2;\
-println 'i=',i;\
-gosub test;\
-next i;\
-j=1.79;\
-println 'j=' j;\
-println 'end of test 3';\
-end;\
-:test \
-println 'subroutine - sleep';\
-sleep(1);\
-return;",
-
-"\
-println 'start of test 4';\
+println 'Demo 3 - Plus';\
 tic(1);\
 for i = 1 to 2;\
-j = i + 0.25 + 1/2;\
-println 'j=' j;\
-k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j);\
-println 'k=' k;\
+  j = i + 0.25 + 1/2;\
+  println 'j=' j;\
+  k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j);\
+  println 'k=' k;\
 next i;\
 :repeat \
 if toc(1)<=300 then goto repeat;\
@@ -135,18 +121,6 @@ println 'ceil(x)=' ceil(x);\
 println 'round(x)=' round(x);\
 println 'x^3=' pow(x,3);\
 next i;\
-println 'Analog Write Test';\
-for i = 1 to 5;\
-for j = 1 to 4;\
-pwm(j,4095*uniform);\
-next j;\
-sleep(0.5);\
-println 'pwm=' pwm(1),pwm(2),pwm(3),pwm(4);\
-next i;\
-pwm(1,0);\
-pwm(2,0);\
-pwm(3,0);\
-pwm(4,0);\
 println 'GPIO 1:4 Test';\
 for i = 1 to 1;\
 for j = 0 to 2;\
@@ -156,7 +130,7 @@ next j;\
 next i;\
 println 'gpio(1)=' gpio(1);\
 println 'gpio(2)=' gpio(2);\
-println 'Press the Blue Button!';\
+println 'Press the Blue Button or type kill!';\
 :presswait \
 if hw_event(1)=0 then goto presswait;\
 tic(1);\
@@ -165,58 +139,97 @@ println 'Blue Button pressed!';\
 if hw_event(2)=0 then goto deprwait;\
 println 'duration =' toc(1);\
 println 'Blue Button de-pressed!';\
-println 'end of test 4';\
+println 'Demo 3 Completed';\
 end;",
 
 "\
-println 'start of test 5';\
+println 'Demo 4 - Input with timeouts';\
 dim a@(5);\
 for i = 1 to 5;\
-print '?';\
-input a@(i),10000;\
+  print '?';\
+  input a@(i),10000;\
 next i;\
 println 'end of input';\
 for i = 1 to 5;\
-println 'a(' i ') = ' a@(i);\
+  println 'a(' i ') = ' a@(i);\
 next i;\
-println 'end of test 5';\
+println 'Demo 4 Completed';\
 end",
 
 "\
-println 'start of test 6';\
+println 'Demo 5 - analog inputs and arrays';\
 for i = 1 to 100;\
-x = aread(16);\
-y = aread(17);\
-println 'VREF,TEMP=', x, y;\
+  x = aread(16);\
+  y = aread(17);\
+  println 'VREF,TEMP=', x, y;\
 next i;\
 for i = 1 to 1;\
-n = floor(10 * uniform) + 2 ;\
-dim b@(n);\
-for j = 1 to n;\
-b@(j) = ran;\
-println 'b@(' j ')=' b@(j);\
-next j;\
+  n = floor(10 * uniform) + 2 ;\
+  dim b@(n);\
+  for j = 1 to n;\
+    b@(j) = ran;\
+    println 'b@(' j ')=' b@(j);\
+  next j;\
 next i;\
-println 'end of test 6';\
+println 'Demo 5 Completed';\
 end;",
 
+
 "\
-println 'start of test 7';\
-println 'Test If:';\
+println 'Demo 6: Multiline if, while';\
+println 'Test If: 1';\
 for i=1 to 10 step 0.125;\
   x = uniform;\
-  if x>0.5 then;\
+  if (x>=0.5) then;\
     println x, 'is greater then 0.5';\
   else;\
     println x, 'is smaller then 0.5';\
   endif;\
-  println i;\
+  println 'i=' i;\
 next i;\
-println 'Test While:';\
-while i>=0;\
+println 'End of If-test 1';\
+println 'Test While: 1';\
+i=10;\
+while ((i>=0)&&(uniform<=0.9));\
   i = i - 0.125;\
   println 'i =', i;\
 endwhile;\
+println 'End of While-test 1';\
+println 'Demo 6 Completed';\
+end",
+
+"\
+println 'Demo 7: Analog Read or Kill';\
+y=0;\
+:startover \
+  x = aread(10);\
+  if (abs(x-y)>20) then;\
+    y = x;\
+    println 'x=',x;\
+  endif;\
+  sleep (0.2);\
+goto startover;\
+end",
+
+"\
+println 'Demo 8: PWM 4-Channel Test';\
+p = 65536;\
+for k = 1 to 10;\
+  p = p/2;\
+  pwm_conf(p,4096);\
+  println 'prescaler = ' p;\
+  for i = 1 to 10;\
+    for j = 1 to 4;\
+      pwm(j,4095*uniform);\
+    next j;\
+    println '    pwm=' pwm(1),pwm(2),pwm(3),pwm(4);\
+    sleep(5);\
+  next i;\
+next k;\
+pwm(1,0);\
+pwm(2,0);\
+pwm(3,0);\
+pwm(4,0);\
 end"
 };
 
@@ -224,7 +237,10 @@ end"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-
+char welcome_msg[]=
+"\
+Welcome to uBasic-Plus for STM32 by M.Kostrun\n\
+Based on uBasic by A.Dunkels, uBasic with string by D.Mitchell and CHDK\n>";
 /* USER CODE BEGIN PV */
 /* USER CODE END PV */
 
@@ -237,7 +253,8 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 /* Private variables ---------------------------------------------------------*/
-
+char script[1024];
+char statement[64];
 
 /* USER CODE END 0 */
 
@@ -246,7 +263,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t counter=0;
   uint32_t time_last_ms = HAL_GetTick();
-  char statement[64];
   /* USER CODE END 1 */
 
   /* BASIC VARS BEGIN */
@@ -282,6 +298,7 @@ int main(void)
   /* Initialize Push Button - see also sw.c */
   BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_EXTI);
 
+
   for (uint8_t i=0; i<1; i++)
   {
     ubasic_load_program( program[6] );
@@ -293,9 +310,139 @@ int main(void)
     while(!ubasic_finished());
   }
 
-  /* USER CODE BEGIN WHILE */
-  ubasic_clear_variables();
-  print_serial(">");
+  while(1)
+  {;}
+
+  print_serial(welcome_msg);
+
+
+
+  while (1)
+  {
+    if ((cli_state == UBASIC_CLI_LOADED)||(cli_state == UBASIC_CLI_RUNNING))
+    {
+      ubasic_run_program();
+      cli_state = UBASIC_CLI_RUNNING;
+      if (ubasic_finished())
+      {
+        cli_state = UBASIC_CLI_IDLE;
+        print_serial("\n>");
+      }
+      else if (!ubasic_waiting_for_input())
+      {
+        if (serial_input_available())
+        {
+          serial_input(statement,sizeof(statement));
+          if (is_cmd(statement,"kill"))
+          {
+            // enter programming mode
+            print_serial("killed\n>");
+            cli_state = UBASIC_CLI_IDLE;
+            ubasic_load_program(NULL);
+            continue;
+          }
+        }
+      }
+    }
+
+    if (cli_state != UBASIC_CLI_RUNNING)
+    {
+      if (serial_input_available())
+      {
+        serial_input(statement,sizeof(statement));
+
+        if (is_cmd(statement,"prog"))
+        {
+          // enter programming mode
+          script[0] = 0;
+          print_serial("Enter your script. Type 'run' to execute!\n>");
+          cli_state = UBASIC_CLI_PROG;
+          continue;
+        }
+        else if (is_cmd(statement,"run"))
+        {
+          // run script
+          print_serial("run\n");
+          if (strlen(script) > 0)
+          {
+            ubasic_load_program( script );
+            cli_state = UBASIC_CLI_LOADED;
+          }
+          continue;
+        }
+        else if (is_cmd(statement,"cat"))
+        {
+          // list script
+          print_serial("cat\n");
+          if (strlen(script)>0)
+          {
+            print_serial(script);
+            print_serial("\n>");
+          }
+          continue;
+        }
+        else if (is_cmd(statement,"save"))
+        {
+          // save script: exit PROG mode
+          print_serial("save\n>");
+          if (strlen(script)>0)
+          {
+            cli_state = UBASIC_CLI_IDLE;
+          }
+          continue;
+        }
+        else if (is_cmd(statement,"edit"))
+        {
+          // edit script: re-enter PROG mode
+          print_serial("edit\n>");
+          if (strlen(script)>0)
+          {
+            cli_state = UBASIC_CLI_PROG;
+          }
+          continue;
+        }
+        else if (is_cmd(statement,"demo"))
+        {
+          // run script
+          print_serial(statement);
+          print_serial("\n");
+          char *s = &statement[4];
+          while (*s==' ') ++s;
+          uint8_t idx = *s - '0';
+          ubasic_load_program( program[idx-1] );
+          cli_state = UBASIC_CLI_LOADED;
+          continue;
+        }
+
+        if (cli_state == UBASIC_CLI_PROG)
+        {
+          // add statement to the script
+          if (strlen(script)>0)
+          {
+            while (script[strlen(script)-1]==' ' || script[strlen(script)-1]=='\t')
+              script[strlen(script)-1]='\0';
+            if (script[strlen(script)-1] != '\n' && script[strlen(script)-1] != ';')
+              sprintf(&script[strlen(script)], "\n");
+          }
+          sprintf(&script[strlen(script)], statement);
+          print_serial(statement);
+          print_serial("\n>");
+        }
+        else
+        {
+          // prepare statement for execution
+          if (strlen(statement) > 0)
+          {
+            print_serial(statement);
+            print_serial("\n>");
+            ubasic_load_program( statement );
+            cli_state = UBASIC_CLI_LOADED;
+          }
+        }
+      }
+    }
+  }
+
 
 } /* main() */
 

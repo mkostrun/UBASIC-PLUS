@@ -32,12 +32,7 @@
   */
 /* Includes ------------------------------------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
-#include "cube_hal.h"
-
-#include "stm32f0xx_hal.h"
-#include "stm32f0xx.h"
-#include "stm32f0xx_it.h"
-#include "usart.h"
+#include "main.h"
 
 /* USER CODE BEGIN 0 */
 __IO uint32_t ubasic_script_wait_for_input_ms=0;
