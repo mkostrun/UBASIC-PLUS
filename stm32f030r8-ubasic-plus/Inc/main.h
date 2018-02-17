@@ -45,6 +45,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "cube_hal.h"
+#include "stm32f0xx_hal.h"
+#include "stm32f0xx_hal_conf.h"
 /* USER CODE END Includes */
 
 
