@@ -432,7 +432,8 @@ end
 
   For both boards a HAL UART library with RX using circular buffer was implemented and tested.
 The library provides Arduino-type serial-available and serial-read functions. The library is
-the same for both STM32F0 boards.
+the same for both STM32F0 boards. The library is located in Drivers folder and should replace
+the same by STM.
 
 
 ### STM32F030R8-Nucleo64
