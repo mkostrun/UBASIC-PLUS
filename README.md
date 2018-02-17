@@ -63,8 +63,9 @@ are very fast as there are no line searches.
 
 - End of line characters *'\n'* and *';'*
 
-- config.h , allows user to select which of the features below
-(if any) they want in their uBasic build.
+- *config.h*
+
+  Allows user to select which of the features below (if any) they want in their uBasic build.
 
 - Fixep point floats are implemented through Fixed Point Math Library for C
 by Ivan Voras and Tim Hartnick, https://sourceforge.net/projects/fixedptc.
@@ -78,7 +79,8 @@ The libary is enhanced with str_fixedpt function, which converts a string to fix
 
 - *input {a,a$,a@(i)}, timeout_ms*
 
-   wait at most until *timeout_ms* for input from the serial port.
+   Wait at most until *timeout_ms* for input from the serial port. Wait is not executed
+inside the interpreter.
 Relies on external functions for serial-available and serial-read to be supplied as
 documented in *config.h*
 
@@ -119,12 +121,19 @@ in this example:
 
 - *sleep(f)*
 
-  wait *f* seconds, which can be fixed point float.
+  Wait *f* seconds, which can be fixed point float.
 This is not executed inside the BASIC interpreter.
 
-- ran
+- *ran, uniform*
 
-  system random number generator based on the external function - see documentation in config.h
+  System random number generators based on the external function as documented in *config.h* .
+On STM32 (below) *ran* and *uniform* use two lowest bits after the analog read from
+the internal temperature sensor. From multiple calls required number of random bits is collected.
+
+  *ran* - creates random positive integer in fixed point float representation.
+
+  *unifrom* - creates random fixed point float in the range 0 to 0.999.
+
 
 - *tic(n), a=toc(n)*
 
