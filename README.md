@@ -94,7 +94,8 @@ waits at most 10sec for each input to complete.
 
 - *println*
 
-  Same as *print* but adds an empty line at the end.
+  Same as *print* but adds an empty line at the end. Additional identifiers *hex* or *dec*
+can be used to print the number as (hex)adecimal if fixed point floats are not desired.
 
 - *sleep(f)*
 
