@@ -82,7 +82,7 @@ The libary is enhanced with str_fixedpt function, which converts a string to fix
    Wait at most until *timeout_ms* for input from the serial port. Wait is not executed
 inside the interpreter.
 Relies on external functions for serial-available and serial-read to be supplied as
-documented in *config.h*
+documented in *config.h* .
 
 
 - 26 fixed point arrays, a@ to z@, dynamically allocated using DIM command,
@@ -124,15 +124,16 @@ in this example:
   Wait *f* seconds, which can be fixed point float.
 This is not executed inside the BASIC interpreter.
 
+
 - *ran, uniform*
 
   System random number generators based on the external function as documented in *config.h* .
-On STM32 (below) *ran* and *uniform* use two lowest bits after the analog read from
+On STM32 boards listed below, *ran* and *uniform* use two lowest bits after the analog read from
 the internal temperature sensor. From multiple calls required number of random bits is collected.
 
-  *ran* - creates random positive integer in fixed point float representation.
+    - *ran* - generates random positive integer in fixed point float representation.
 
-  *unifrom* - creates random fixed point float in the range 0 to 0.999.
+    - *uniform* - generates random fixed point float in the range 0 to 0.999.
 
 
 - *tic(n), a=toc(n)*
@@ -141,28 +142,36 @@ the internal temperature sensor. From multiple calls required number of random b
 
 - *sqrt, sin, cos, tan, exp, ln, pow*
 
-  fixed point arithmetic single argument functions from fixed point math library
+  fixed point arithmetic single argument functions from the fixed point math library.
 
 - *floor, ceil, round, abs*
 
-  fixed point float to fixed point integer arithmetic functions
+  fixed point float to fixed point integer arithmetic functions.
 
-- *uniform*
-
-  system fixed point random number generator in the range 0.000 to 0.999.
 
 - *gpio(pin,state), a=gpio(pin)*
 
-  direct control over digital pins. Tied to hardware specific functions as described in config.h
+  Allows direct control over digital pins.
+Tied to hardware specific functions as described in *config.h* .
 
-  
+
 - *pwm_conf(prescaler,period), pwm(channel,value), pwm(channel)*
 
   direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
 
+
 - *hw_event(channel)*
 
-  access to flags that can be set outside BASIC interpreter, e.g., using interrupts, that are available to BASIC scripts for flow control.
+  Allow flags that can be set outside BASIC interpreter, e.g., using interrupts,
+to be used in flow control.
+  ```
+  :waithere
+      if (hw_event(1)==0) then goto waithere;
+  ```
+  In this example the script sits in this loop until the hardware event flag no. 1
+gets set by external process. Importantly, after the interpreter recognizes that the
+flag has been set, it immediately resets it so the subsequent calls will return 0
+until the flag is set again externally.
 
 - *aread(channel)*
 
