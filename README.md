@@ -51,23 +51,26 @@ available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasi
 uBasic Plus combines 'uBasic with strings' with elements of 'CHDK' version of uBasic.
 For CHDK please see http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
 It adds the following functionalities:
-- config.h, configuration which allows user to select which features they want
-in their uBasic build
-- if/then/else/endif - for multiline If-command
-- while/endwhile
-- uses CHDK-style labels (:same_label) instead of the line numbers. The implementation
-is slightly different then in CHDK in that when the labels are refered to in goto/gosub
-they need not be in quotation marks. Furthermore, not even internally the lines are numbered.
-In fact, using pointers within the string rather then the line numbers as CHDK does,
-makes returns - from gosub, for/next, if/then/else, while/endwhile - very fast (no line searches).
-- Fixed Point Math Library for C by Ivan Voras and Tim Hartnick, from
-https://sourceforge.net/projects/fixedptc. Their libary is enhanced with a function
-str_fixedpt, which converts a string to fixed point integer.
+- No more line numbers Instead CHDK-style labels are used, *:some_label*.
+However, unlike CHDK, when these labels are refered to in goto/gosub they are not
+inside quotation marks. Also, internally the lines are not numbered,
+rather pointers are used, so returns - from gosub, for/next, if/then/else, while/endwhile -
+are very fast as there are no line searches.
+- config.h, configuration which allows user to select which of the features below
+(if any) they want in their uBasic build.
+- Fixep point floats are implemented through Fixed Point Math Library for C
+by Ivan Voras and Tim Hartnick, https://sourceforge.net/projects/fixedptc.
+The libary is enhanced with str_fixedpt function, which converts a string to fixed point float.
+- flow control
+  - two character logical operators supported (<>,<=,>=,==,&&,||)
+  - complex logical expressions supported with use of brackets
+  - multi-line If-command (CHDK-style)
+  - while/endwhile
 - Strings can be encompassed by single or double quotations
 - Besides '\n', ';' can also be used as end-of-line character
 - println
       at the end of printout add an empty line '\n'
-- Two character logical operators are also implemented (<>,<=,>=,==)
+- Two character logical operators are also implemented 
 - 26 fixed point arrays, named a@ to z@, dynamically allocated using DIM command,
 and accessed through index, e.g., a@(i)
 - *sleep(f)*,
@@ -80,7 +83,7 @@ and accessed through index, e.g., a@(i)
       rlabplus-type six timers for measuring the passed time from different breakpoints in the script
 - *sqrt, sin, cos, tan, exp, ln, pow*
       fixed point arithmetic single argument functions from fixed point math library
-- *floor, ceil, round*
+- *floor, ceil, round, abs*
       fixed point float to fixed point integer arithmetic functions
 - *uniform*
       system fixed point random number generator in the range 0.000 to 0.999.
@@ -100,21 +103,28 @@ and accessed through index, e.g., a@(i)
   ```
   will set the channel 1 gpio to 1 from the command line.
 - *does not fit in anything above*
-  ```
-  ... println [hex,dec] x 
-  ```
-  will print *x* as hexadecimal integer, decimal integer, or as a fixed point number.
+
+  In the scripts the numbers can be entered either directly as,
   ```
   ... x = 0xaabbccdd
   ```
   or
   ```
+  ... x = 0b1101001
+  ```
+  or
+  ```
   ... x = 123456[d,D,L,l]
   ```
-  will define *true* x as given and not convert it to fixed point integer.
-  Binary format '0b' can be input as well.
+  if default conversion to fixed point integer is not needed.
 
-  
+  The values can be printed directly as
+  ```
+  ... println [hex,dec] x 
+  ```
+  that is, as hexadecimal or decimal integer, if default printout,
+  that of fixed point integer, is not needed.
+
 
 
 
@@ -140,7 +150,7 @@ for i = 1 to 20;
 next i;
 println 'end of test 1';
 end;
-:label1 \
+:label1 
 println 'subroutine';
 return;
 ```
@@ -186,7 +196,7 @@ for i = 1 to 2;
   k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j);
   println 'k=' k;
 next i;
-:repeat \
+:repeat 
 if toc(1)<=300 then goto repeat;
 for i = 1 to 2;
   println 'ran(' i ')=' ran;
@@ -224,12 +234,12 @@ next i;
 println 'gpio(1)=' gpio(1);
 println 'gpio(2)=' gpio(2);
 println 'Press the Blue Button!';
-:presswait \
-if hw_event(1)=0 then goto presswait;
+:presswait 
+  if hw_event(1)=0 then goto presswait;
 tic(1);
 println 'Blue Button pressed!';
-:deprwait \
-if hw_event(2)=0 then goto deprwait;
+:deprwait 
+  if hw_event(2)=0 then goto deprwait;
 println 'duration =' toc(1);
 println 'Blue Button de-pressed!';
 println 'end of test 3';
