@@ -78,17 +78,19 @@ The libary is enhanced with str_fixedpt function, which converts a string to fix
 
 - *input {a,a$,a@(i)}, timeout*
 
-   wait until timeout for input through serial port, external functions for serial-availabe and serial-read have to be supplied - see documentation in config.h
+   wait until timeout for input through serial port, external functions for serial-availabe
+and serial-read have to be supplied - see documentation in *config.h*
 
 
 - 26 fixed point arrays, a@ to z@, dynamically allocated using DIM command,
 ```
-dim a@(5);
-for i = 1 to 5;
-  input a@(i),10000;
-next i;
+  dim a@(5);
+  for i = 1 to 5;
+    input a@(i),10000;
+  next i;
 ```
-
+  In this example code expects 5 array entries to be entered through serial port, and
+waits at most 10sec for inputting each to complete.
 
 - println
       at the end of printout add an empty line '\n'
