@@ -83,12 +83,12 @@ and serial-read have to be supplied - see documentation in *config.h*
 
 
 - 26 fixed point arrays, a@ to z@, dynamically allocated using DIM command,
-```
+  ```
   dim a@(5);
   for i = 1 to 5;
     input a@(i),10000;
   next i;
-```
+  ```
   In this example code expects 5 array entries to be entered through serial port, and
 waits at most 10sec for inputting each to complete.
 
