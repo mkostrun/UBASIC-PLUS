@@ -187,7 +187,7 @@ Besides interpreter CLI is provided that supports the following commands:
 - *prog*
 
   The CLI enters the line input mode. Everything entered on the serial port is considered
-as a sequential line in the script.
+as a sequential line in the script. Repeated execution of *prog* erases the previous script.
 
 - *run*
 
@@ -210,6 +210,10 @@ script.
 
   execute demo script number N.
 
+- *kill*
+
+  Stops the script if it is being executed, and returns control to command prompt.
+
 - If in *prog* mode, every typed line is added to the script until *save* or *run* is
 executed.
 
@@ -228,23 +232,23 @@ STM32F051-Discovery are used in combination with CubeMX created system libraries
 
 ### Demo 1 - warm up
 ```
-println 'start of test 1';
-gosub label1;
-for i = 1 to 20;
-  for j = 1 to 20;
-    println 'i,j=',i,j;
-  next j;
-next i;
-println 'end of test 1';
-end;
-:label1 
-println 'subroutine';
-return;
+println 'Demo 1 - Warm-up'
+gosub l1
+for i = 1 to 2
+  for j = 1 to 2
+    println 'i,j=',i,j
+  next j
+next i
+println 'Demo 1 Completed'
+end
+  :l1
+println 'subroutine'
+return
 ```
 
 ### Demo 2 - based on an example by David Mitchell for his 'uBasic with strings'
 ```
-println 'start of test 2';
+println 'Demo 2';
 a$= 'abcdefghi';
 b$='123456789';
 println 'Length of a$=', len(a$);
@@ -269,73 +273,61 @@ println val('12345');
 i=instr(3, '123456789', '67');
 println 'position of 67 in 123456789 is', i;
 println mid$(a$,2,2)+'xyx';
-println 'end of test 2';
+println 'Demo 2 Completed';
 end;
 ```
 
 ### Demo 3 - uBasic-Plus is here
 ```
-println 'start of test 3';
-tic(1);
-for i = 1 to 2;
-  j = i + 0.25 + 1/2;
-  println 'j=' j;
-  k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j);
-  println 'k=' k;
-next i;
-:repeat 
-if toc(1)<=300 then goto repeat;
-for i = 1 to 2;
-  println 'ran(' i ')=' ran;
-next i;
-for i = 1 to 2;
-  println 'uniform(' i ')=' uniform;
-next i;
-for i = 1 to 2;
-  x = 10 * uniform;
-  println 'x=' x;
-  println 'floor(x)=' floor(x);
-  println 'ceil(x)=' ceil(x);
-  println 'round(x)=' round(x);
-  println 'x^3=' pow(x,3);
-next i;
-println 'Analog Write Test';
-for i = 1 to 5;
-  for j = 1 to 4;
-    pwm(j,4095*uniform);
-  next j;
-  sleep(0.5);
-  println 'pwm=' pwm(1),pwm(2),pwm(3),pwm(4);
-next i;
-pwm(1,0);
-pwm(2,0);
-pwm(3,0);
-pwm(4,0);
-println 'GPIO 1:4 Test';
-for i = 1 to 1;
-  for j = 0 to 2;
-    gpio(i,(j % 2));
-    sleep(0.5);
-  next j;
-next i;
-println 'gpio(1)=' gpio(1);
-println 'gpio(2)=' gpio(2);
-println 'Press the Blue Button!';
-:presswait 
-  if hw_event(1)=0 then goto presswait;
-tic(1);
-println 'Blue Button pressed!';
-:deprwait 
-  if hw_event(2)=0 then goto deprwait;
-println 'duration =' toc(1);
-println 'Blue Button de-pressed!';
-println 'end of test 3';
-end;
+println 'Demo 3 - Plus';\
+tic(1);\
+for i = 1 to 2;\
+  j = i + 0.25 + 1/2;\
+  println 'j=' j;\
+  k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j);\
+  println 'k=' k;\
+next i;\
+  :repeat \
+if toc(1)<=300 then goto repeat;\
+for i = 1 to 2;\
+println 'ran(' i ')=' ran;\
+next i;\
+for i = 1 to 2;\
+println 'uniform(' i ')=' uniform;\
+next i;\
+for i = 1 to 2;\
+x = 10 * uniform;\
+println 'x=' x;\
+println 'floor(x)=' floor(x);\
+println 'ceil(x)=' ceil(x);\
+println 'round(x)=' round(x);\
+println 'x^3=' pow(x,3);\
+next i;\
+println 'GPIO 1:4 Test';\
+for i = 1 to 1;\
+for j = 0 to 2;\
+gpio(i,(j % 2));\
+sleep(0.5);\
+next j;\
+next i;\
+println 'gpio(1)=' gpio(1);\
+println 'gpio(2)=' gpio(2);\
+println 'Press the Blue Button or type kill!';\
+  :presswait \
+if hw_event(1)=0 then goto presswait;\
+tic(1);\
+println 'Blue Button pressed!';\
+  :deprwait \
+if hw_event(2)=0 then goto deprwait;\
+println 'duration =' toc(1);\
+println 'Blue Button de-pressed!';\
+println 'Demo 3 Completed';\
+end;",
 ```
 
 ### Demo 4 - input array entries in 10 sec time
 ```
-println 'start of test 4';
+println 'Demo 4 - Input with timeouts';
 dim a@(5);
 for i = 1 to 5;
   print '?';
@@ -345,13 +337,13 @@ println 'end of input';
 for i = 1 to 5;
   println 'a(' i ') = ' a@(i);
 next i;
-println 'end of test 4';
+println 'Demo 4 Completed';\
 end
 ```
 
 ### Demo 5 - analog read with arrays
 ```
-println 'start of test 5';
+println 'Demo 5 - analog inputs and arrays';
 for i = 1 to 100;
   x = aread(16);
   y = aread(17);
@@ -365,29 +357,71 @@ for i = 1 to 1;
     println 'b@(' j ')=' b@(j);
   next j;
 next i;
-println 'end of test 5';
+println 'Demo 5 Completed';
 end;
 ```
 
-### Demo 6th - if/then/else/endif and while/endwhile
+### Demo 6 - if/then/else/endif and while/endwhile
 ```
-println 'start of test 6';
-println 'Test If:';
-for i=1 to 10 step 0.125;
-  x = uniform;
-  if (x>0.5) then;
-    println x, 'is greater then 0.5';
-  else;
-    println x, 'is smaller then 0.5';
-  endif;
-  println i;
-next i;
-println 'Test While:';
-while (i>=0);
-  i = i - 0.125;
-  println 'i =', i;
-endwhile;
-println 'end of test 6';
+println 'Demo 6: Multiline if, while'
+println 'Test If: 1'
+for i=1 to 10 step 0.125
+  x = uniform
+  if (x>=0.5) then
+    println x, 'is greater then 0.5'
+  else
+    println x, 'is smaller then 0.5'
+  endif
+  println 'i=' i
+next i
+println 'End of If-test 1'
+println 'Test While: 1'
+i=10
+while ((i>=0)&&(uniform<=0.9))
+  i = i - 0.125
+  println 'i =', i
+endwhile
+println 'End of While-test 1'
+println 'Demo 6 Completed'
+end
+```
+
+### Demo 7 - kill test
+```
+println 'Demo 7: Analog Read or Kill'
+y=0
+  :startover 
+  x = aread(10)
+  if (abs(x-y)>20) then
+    y = x
+    println 'x=',x
+  endif
+  sleep (0.2)
+goto startover
+end
+```
+
+
+### Demo 8 - PWM Test
+```
+println 'Demo 8: PWM 4-Channel Test'
+p = 65536
+for k = 1 to 10
+  p = p/2
+  pwm_conf(p,4096)
+  println 'prescaler =', p
+  for i = 1 to 10
+    for j = 1 to 4
+      pwm(j,4095*uniform)
+    next j
+    println '    pwm=',pwm(1),pwm(2),pwm(3),pwm(4)
+    sleep(5)
+  next i
+next k
+pwm(1,0)
+pwm(2,0)
+pwm(3,0)
+pwm(4,0)
 end
 ```
 
