@@ -205,6 +205,7 @@ extern volatile uint32_t ubasic_script_sleeping_ms;
 // What it means to support PWM:
 #if defined(UBASIC_SCRIPT_HAVE_PWM_CHANNELS)
 extern int16_t dutycycle_pwm_ch[UBASIC_SCRIPT_HAVE_PWM_CHANNELS];
+void pwm_Config (uint16_t psc, uint16_t per);
 void pwm_UpdateDutyCycle(uint8_t ch, int16_t dutycycle);
 #endif
 
@@ -258,7 +259,7 @@ extern uint8_t ubasic_script_wait_for_input_expired;
 uint32_t  RandomUInt32(uint8_t size);
 #if defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
 uint8_t   SelectChannelADC(uint8_t channel);
-uint16_t  AnalogRead(void);
+uint16_t  AnalogRead(uint8_t nreads);
 #endif /* UBASIC_SCRIPT_HAVE_ANALOG_READ */
 #endif /* UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR || UBASIC_SCRIPT_HAVE_ANALOG_READ */
 

@@ -117,6 +117,7 @@ static const struct keyword_token keywords[] =
   #if defined(UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR)
   {"uniform", TOKENIZER_UNIFORM},
   #endif
+  {"abs", TOKENIZER_ABS},
   {"floor", TOKENIZER_FLOOR},
   {"ceil", TOKENIZER_CEIL},
   {"round", TOKENIZER_ROUND},
@@ -126,6 +127,7 @@ static const struct keyword_token keywords[] =
   {"gpio", TOKENIZER_GPIO},
 #endif
 #ifdef UBASIC_SCRIPT_HAVE_PWM_CHANNELS
+  {"pwm_conf", TOKENIZER_PWMCONF},
   {"pwm", TOKENIZER_PWM},
 #endif
 #if defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
@@ -162,15 +164,35 @@ static uint8_t singlechar_or_operator(uint8_t *offset)
   }
   else if(*ptr == '&')
   {
+    if (*(ptr+1) == '&')
+    {
+      if (offset)
+        *offset += 1;
+      return TOKENIZER_LAND;
+    }
     return TOKENIZER_AND;
   }
   else if(*ptr == '|')
   {
+    if (*(ptr+1) == '|')
+    {
+      if (offset)
+        *offset += 1;
+      return TOKENIZER_LOR;
+    }
     return TOKENIZER_OR;
   }
   else if(*ptr == '*')
   {
     return TOKENIZER_ASTR;
+  }
+  else if(*ptr == '!')
+  {
+    return TOKENIZER_LNOT;
+  }
+  else if(*ptr == '~')
+  {
+    return TOKENIZER_NOT;
   }
   else if(*ptr == '/')
   {

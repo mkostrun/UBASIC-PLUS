@@ -58,27 +58,32 @@ static char const *program_ptr;
 static uint16_t gosub_stack[MAX_GOSUB_STACK_DEPTH];
 static uint8_t gosub_stack_ptr;
 
+#define MAX_FOR_STACK_DEPTH 4
 struct for_state {
   uint16_t line_after_for;
   uint8_t  for_variable;
   VARIABLE_TYPE to;
   VARIABLE_TYPE step;
 };
-#define MAX_FOR_STACK_DEPTH 4
 static struct for_state for_stack[MAX_FOR_STACK_DEPTH];
 static uint8_t for_stack_ptr;
 
 #define MAX_IF_STACK_DEPTH  4
-static uint8_t if_stack[MAX_IF_STACK_DEPTH];
+static int16_t if_stack[MAX_IF_STACK_DEPTH];
 static uint8_t if_stack_ptr;
 
 #define MAX_WHILE_STACK_DEPTH 4
-static uint8_t while_stack[MAX_WHILE_STACK_DEPTH];
+struct while_state {
+  uint16_t line_while;
+  int16_t line_after_endwhile;
+};
+//static int16_t while_stack[MAX_WHILE_STACK_DEPTH];
+static struct while_state while_stack[MAX_FOR_STACK_DEPTH];
 static uint8_t while_stack_ptr;
 
 VARIABLE_TYPE variables[MAX_VARNUM];
 
-static VARIABLE_TYPE expr(void);
+static VARIABLE_TYPE relation(void);
 uint16_t current_linenum=0;
 static void numbered_line_statement(void);
 static void statement(void);
@@ -111,7 +116,7 @@ VARIABLE_TYPE  input_array_index;
 /*---------------------------------------------------------------------------*/
 void ubasic_clear_variables()
 {
-  uint16_t i;
+  int16_t i;
   for (i=0; i<MAX_VARNUM; i++)
   {
     variables[i] = 0;
@@ -139,10 +144,14 @@ void ubasic_clear_variables()
 /*---------------------------------------------------------------------------*/
 void ubasic_load_program(const char *program)
 {
-  program_ptr = program;
+  ubasic_status.byte= 0;
   for_stack_ptr = gosub_stack_ptr = 0;
-  tokenizer_init(program);
-  ubasic_status.bit.isRunning = 1;
+  if (program)
+  {
+    program_ptr = program;
+    tokenizer_init(program);
+    ubasic_status.bit.isRunning = 1;
+  }
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t accept(VARIABLE_TYPE token)
@@ -385,7 +394,7 @@ char* sfactor()
       accept(TOKENIZER_LEFTPAREN);
       s = sexpr();
       accept(TOKENIZER_COMMA);
-      i = expr();
+      i =relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       i = fixedpt_toint(i);
   #endif
@@ -398,7 +407,7 @@ char* sfactor()
       accept(TOKENIZER_LEFTPAREN);
       s = sexpr();
       accept(TOKENIZER_COMMA);
-      i = expr();
+      i =relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       i = fixedpt_toint(i);
   #endif
@@ -411,14 +420,14 @@ char* sfactor()
       accept(TOKENIZER_LEFTPAREN);
       s = sexpr();
       accept(TOKENIZER_COMMA);
-      i = expr();
+      i =relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       i = fixedpt_toint(i);
   #endif
       if (tokenizer_token() == TOKENIZER_COMMA)
       {
         accept(TOKENIZER_COMMA);
-        j = expr();
+        j =relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
         j = fixedpt_toint(j);
   #endif
@@ -433,7 +442,7 @@ char* sfactor()
 
     case TOKENIZER_STR$:
       accept(TOKENIZER_STR$);
-      j = expr();
+      j =relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       j = fixedpt_toint(j);
   #endif
@@ -442,7 +451,7 @@ char* sfactor()
 
     case TOKENIZER_CHR$:
       accept(TOKENIZER_CHR$);
-      j = expr();
+      j =relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       j = fixedpt_toint(j);
   #endif
@@ -578,7 +587,8 @@ static VARIABLE_TYPE factor(void)
 #if defined(UBASIC_SCRIPT_HAVE_TICTOC)
     case TOKENIZER_TOC:
       accept(TOKENIZER_TOC);
-      r = expr();
+      accept(TOKENIZER_LEFTPAREN);
+      r =relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_toint(r);
   #endif
@@ -596,6 +606,7 @@ static VARIABLE_TYPE factor(void)
         r = ubasic_script_tic0_ms;
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_fromint(r);
+      accept(TOKENIZER_RIGHTPAREN);
   #endif
       break;
 #endif
@@ -604,7 +615,8 @@ static VARIABLE_TYPE factor(void)
 #if defined(UBASIC_SCRIPT_HAVE_HARDWARE_EVENTS)
     case TOKENIZER_HWE:
       accept(TOKENIZER_HWE);
-      r = expr();
+      accept(TOKENIZER_LEFTPAREN);
+      r = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_toint(r);
   #endif
@@ -620,6 +632,7 @@ static VARIABLE_TYPE factor(void)
         else
           r = 0;
       }
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 #endif /* #if defined(UBASIC_SCRIPT_HAVE_HARDWARE_EVENTS) */
 
@@ -638,16 +651,25 @@ static VARIABLE_TYPE factor(void)
       break;
 #endif
 
+    case TOKENIZER_ABS:
+      accept(TOKENIZER_ABS);
+      accept(TOKENIZER_LEFTPAREN);
+      r = relation();
+      if (r<0)
+        r = -r;
+      accept(TOKENIZER_RIGHTPAREN);
+      break;
+
 
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
     case TOKENIZER_POWER:
       accept(TOKENIZER_POWER);
       accept(TOKENIZER_LEFTPAREN);
       // argument:
-      i = expr();
+      i =relation();
       accept(TOKENIZER_COMMA);
       // exponent
-      j = expr();
+      j = relation();
       r = fixedpt_pow(i,j);
       accept(TOKENIZER_RIGHTPAREN);
       break;
@@ -661,37 +683,49 @@ static VARIABLE_TYPE factor(void)
 
     case TOKENIZER_SQRT:
       accept(TOKENIZER_SQRT);
-      r = fixedpt_sqrt( expr() );
+      accept(TOKENIZER_LEFTPAREN);
+      r = fixedpt_sqrt( relation() );
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 
 
     case TOKENIZER_SIN:
       accept(TOKENIZER_SIN);
-      r = fixedpt_sin( expr() );
+      accept(TOKENIZER_LEFTPAREN);
+      r = fixedpt_sin( relation() );
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 
 
     case TOKENIZER_COS:
       accept(TOKENIZER_COS);
-      r = fixedpt_cos( expr() );
+      accept(TOKENIZER_LEFTPAREN);
+      r = fixedpt_cos( relation() );
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 
 
     case TOKENIZER_TAN:
       accept(TOKENIZER_TAN);
-      r = fixedpt_tan( expr() );
+      accept(TOKENIZER_LEFTPAREN);
+      r = fixedpt_tan( relation() );
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 
 
     case TOKENIZER_EXP:
       accept(TOKENIZER_EXP);
-      r = fixedpt_exp( expr() );
+      accept(TOKENIZER_LEFTPAREN);
+      r = fixedpt_exp( relation() );
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 
 
     case TOKENIZER_LN:
       accept(TOKENIZER_LN);
-      r = fixedpt_ln( expr() );
+      accept(TOKENIZER_LEFTPAREN);
+      r = fixedpt_ln( relation() );
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 
 
@@ -705,7 +739,8 @@ static VARIABLE_TYPE factor(void)
 
     case TOKENIZER_FLOOR:
       accept(TOKENIZER_FLOOR);
-      r = expr();
+      accept(TOKENIZER_LEFTPAREN);
+      r = relation();
       if (r>=0)
       {
         r = r & (~FIXEDPT_FMASK);
@@ -717,12 +752,14 @@ static VARIABLE_TYPE factor(void)
         if (f>0)
           r -= FIXEDPT_ONE;
       }
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 
 
     case TOKENIZER_CEIL:
       accept(TOKENIZER_CEIL);
-      r = expr();
+      accept(TOKENIZER_LEFTPAREN);
+      r = relation();
       if (r>=0)
       {
         uint32_t f = (r & FIXEDPT_FMASK);
@@ -734,12 +771,14 @@ static VARIABLE_TYPE factor(void)
       {
         r = r & (~FIXEDPT_FMASK);
       }
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 
 
     case TOKENIZER_ROUND:
       accept(TOKENIZER_ROUND);
-      r = expr();
+      accept(TOKENIZER_LEFTPAREN);
+      r = relation();
       uint32_t f = (r & FIXEDPT_FMASK);
       if (r>=0)
       {
@@ -753,14 +792,16 @@ static VARIABLE_TYPE factor(void)
         if (f<=FIXEDPT_ONE_HALF)
           r -= FIXEDPT_ONE;
       }
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 #endif /* #if defined(VARIABLE_TYPE_FLOAT_AS ... */
 
 #if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
     case TOKENIZER_GPIO:
       accept(TOKENIZER_GPIO);
+      accept(TOKENIZER_LEFTPAREN);
       // first argument: channel
-      r = expr();
+      r = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_toint(r);
   #endif
@@ -775,6 +816,7 @@ static VARIABLE_TYPE factor(void)
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_fromint(r);
   #endif
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 #endif
 
@@ -795,8 +837,9 @@ static VARIABLE_TYPE factor(void)
 #ifdef UBASIC_SCRIPT_HAVE_PWM_CHANNELS
     case TOKENIZER_PWM:
       accept(TOKENIZER_PWM);
+      accept(TOKENIZER_LEFTPAREN);
       // single argument: channel
-      j = expr();
+      j = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       j = fixedpt_toint(j);
   #endif
@@ -811,6 +854,7 @@ static VARIABLE_TYPE factor(void)
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_fromint(r);
   #endif
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 #endif
 
@@ -818,14 +862,15 @@ static VARIABLE_TYPE factor(void)
 #if defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
     case TOKENIZER_AREAD:
       accept(TOKENIZER_AREAD);
+      accept(TOKENIZER_LEFTPAREN);
       // single argument: channel as hex value
-      j = expr();
+      j = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       j = fixedpt_toint(j);
   #endif
       if (!SelectChannelADC(j))
       {
-        r = AnalogRead();
+        r = AnalogRead(8);
       }
       else
       {
@@ -834,13 +879,14 @@ static VARIABLE_TYPE factor(void)
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_fromint(r);
 #endif
+      accept(TOKENIZER_RIGHTPAREN);
       break;
 #endif
 
 
     case TOKENIZER_LEFTPAREN:
       accept(TOKENIZER_LEFTPAREN);
-      r = expr();
+      r = relation();
       accept(TOKENIZER_RIGHTPAREN);
       break;
 
@@ -849,7 +895,7 @@ static VARIABLE_TYPE factor(void)
     case TOKENIZER_ARRAYVARIABLE:
       varnum = tokenizer_variable_num();
       accept(TOKENIZER_ARRAYVARIABLE);
-      j = expr();
+      j = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       j = fixedpt_toint(j);
   #endif
@@ -880,7 +926,7 @@ static VARIABLE_TYPE term(void)
 #endif
   {
     f1 = factor();
-    uint8_t op = tokenizer_token();
+    VARIABLE_TYPE op = tokenizer_token();
     while (op == TOKENIZER_ASTR || op == TOKENIZER_SLASH || op == TOKENIZER_MOD)
     {
       tokenizer_next();
@@ -914,54 +960,23 @@ static VARIABLE_TYPE term(void)
   return f1;
 }
 /*---------------------------------------------------------------------------*/
-static VARIABLE_TYPE expr(void)
-{
-  VARIABLE_TYPE t1, t2;
-  t1 = term();
-  uint8_t op = tokenizer_token();
-  while( op == TOKENIZER_PLUS ||
-         op == TOKENIZER_MINUS ||
-         op == TOKENIZER_AND ||
-         op == TOKENIZER_OR)
-  {
-    tokenizer_next();
-    t2 = term();
-    switch(op)
-    {
-      case TOKENIZER_PLUS:
-        t1 = t1 + t2;
-        break;
-      case TOKENIZER_MINUS:
-        t1 = t1 - t2;
-        break;
-      case TOKENIZER_AND:
-        t1 = ((int32_t) t1) & ((int32_t) t2);
-        break;
-      case TOKENIZER_OR:
-        t1 = ((int32_t) t1) | ((int32_t) t2);
-        break;
-    }
-    op = tokenizer_token();
-  }
-
-  return t1;
-}
-
-/*---------------------------------------------------------------------------*/
-static uint8_t relation(void)
+static VARIABLE_TYPE relation(void)
 {
   VARIABLE_TYPE r1, r2;
 
-  r1 = (VARIABLE_TYPE) expr();
+  r1 = (VARIABLE_TYPE) term();
 
-  uint8_t op = tokenizer_token();
+  VARIABLE_TYPE op = tokenizer_token();
 
   while ( op == TOKENIZER_LT || op == TOKENIZER_LE ||
           op == TOKENIZER_GT || op == TOKENIZER_GE ||
-          op == TOKENIZER_EQ || op == TOKENIZER_NE)
+          op == TOKENIZER_EQ || op == TOKENIZER_NE ||
+          op == TOKENIZER_LAND || op == TOKENIZER_LOR ||
+          op == TOKENIZER_PLUS || op == TOKENIZER_MINUS ||
+          op == TOKENIZER_AND || op == TOKENIZER_OR )
   {
     tokenizer_next();
-    r2 = (VARIABLE_TYPE) expr();
+    r2 = (VARIABLE_TYPE) term();
 
     switch(op)
     {
@@ -988,25 +1003,36 @@ static uint8_t relation(void)
       case TOKENIZER_NE:
         r1 = (r1 != r2);
         break;
+
+      case TOKENIZER_LAND:
+        r1 = (r1 && r2);
+        break;
+
+      case TOKENIZER_LOR:
+        r1 = (r1 || r2);
+        break;
+
+      case TOKENIZER_PLUS:
+        r1 = r1 + r2;
+        break;
+
+      case TOKENIZER_MINUS:
+        r1 = r1 - r2;
+        break;
+
+      case TOKENIZER_AND:
+        r1 = ((int32_t) r1) & ((int32_t) r2);
+        break;
+
+      case TOKENIZER_OR:
+        r1 = ((int32_t) r1) | ((int32_t) r2);
+        break;
     }
     op = tokenizer_token();
   }
 
   return r1;
 }
-/*---------------------------------------------------------------------------*/
-// static void jump_line(uint16_t linenum)
-// {
-//   tokenizer_init(program_ptr);
-//   while(tokenizer_line_number() != linenum)
-//   {
-//     tokenizer_next();
-//   }
-// 
-  /* swallow the CR that would be read next */
-// //   tokenizer_next();
-//   accept_cr();
-// }
 
 // TODO: error handling?
 uint8_t jump_label(char * label)
@@ -1119,7 +1145,7 @@ static void pwm_statement(void)
   accept(TOKENIZER_LEFTPAREN);
 
   // first argument: channel
-  j = expr();
+  j = relation();
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   j = fixedpt_toint(j);
 #endif
@@ -1129,24 +1155,48 @@ static void pwm_statement(void)
   accept(TOKENIZER_COMMA);
 
   // second argument: value
-  r = expr();
+  r = relation();
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   r = fixedpt_toint(r);
 #endif
   accept(TOKENIZER_RIGHTPAREN);
 
-  if (r>=0)
+  if (j>=1 && j<=UBASIC_SCRIPT_HAVE_PWM_CHANNELS)
   {
-    if (j>=1 && j<=UBASIC_SCRIPT_HAVE_PWM_CHANNELS)
-    {
-      pwm_UpdateDutyCycle(j, r);
-    }
+    pwm_UpdateDutyCycle(j, r);
   }
 
   accept_cr();
-
   return;
 }
+
+static void pwmconf_statement(void)
+{
+  VARIABLE_TYPE j,r;
+
+  accept(TOKENIZER_PWMCONF);
+  accept(TOKENIZER_LEFTPAREN);
+  // first argument: prescaler 0...
+  j = relation();
+#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+  j = fixedpt_toint(j);
+#endif
+  if (j<0)
+    j = 0;
+
+  accept(TOKENIZER_COMMA);
+  r = relation();
+  // second argument: period
+#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+  r = fixedpt_toint(r);
+#endif
+  pwm_Config(j,r);
+  r = 0;
+  accept(TOKENIZER_RIGHTPAREN);
+  accept_cr();
+}
+
+
 #endif
 
 #if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
@@ -1159,7 +1209,7 @@ static void gpio_statement(void)
   accept(TOKENIZER_LEFTPAREN);
 
   // first argument: channel
-  j = expr();
+  j = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   j = fixedpt_toint(j);
   #endif
@@ -1169,7 +1219,7 @@ static void gpio_statement(void)
   accept(TOKENIZER_COMMA);
 
   // second argument: value
-  r = expr();
+  r = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   r = fixedpt_toint(r);
   #endif
@@ -1240,18 +1290,18 @@ static void print_statement(uint8_t println)
       {
         if (print_how == 1)
         {
-          sprintf(string, "%lx", (uint32_t) expr());
+          sprintf(string, "%lx", (uint32_t) relation());
         }
         else if (print_how == 2)
         {
-          sprintf(string, "%ld", expr());
+          sprintf(string, "%ld", relation());
         }
         else
         {
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-          fixedpt_str(expr(), string, FIXEDPT_FBITS/3 );
+          fixedpt_str( relation(), string, FIXEDPT_FBITS/3 );
 #else
-          sprintf(string, "%ld", expr());
+          sprintf(string, "%ld", relation());
 #endif
         }
       }
@@ -1290,7 +1340,7 @@ static void if_statement(void)
 
   accept(TOKENIZER_IF);
 
-  uint8_t r = relation();
+  VARIABLE_TYPE r = relation();
 
   if (accept(TOKENIZER_THEN))
   {
@@ -1424,7 +1474,8 @@ static void if_statement(void)
 
 static void else_statement(void)
 {
-  uint8_t r=0, endif_cntr, f_nt;
+  VARIABLE_TYPE r=0;
+  uint8_t endif_cntr, f_nt;
 
   accept(TOKENIZER_ELSE);
 
@@ -1505,7 +1556,7 @@ static void let_statement(void)
     varnum = tokenizer_variable_num();
     accept(TOKENIZER_VARIABLE);
     if (!accept(TOKENIZER_EQ))
-      ubasic_set_variable(varnum, expr());
+      ubasic_set_variable(varnum, relation());
   }
 #if defined(VARIABLE_TYPE_STRING)
   // string additions here
@@ -1525,13 +1576,13 @@ static void let_statement(void)
     accept(TOKENIZER_ARRAYVARIABLE);
 
     accept(TOKENIZER_LEFTPAREN);
-    VARIABLE_TYPE idx = expr();
+    VARIABLE_TYPE idx = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
     idx = fixedpt_toint( idx );
   #endif
     accept(TOKENIZER_RIGHTPAREN);
     if (!accept(TOKENIZER_EQ))
-      ubasic_set_arrayvariable(varnum, (uint16_t) idx, expr());
+      ubasic_set_arrayvariable(varnum, (uint16_t) idx, relation());
   }
 #endif
   accept_cr();
@@ -1550,7 +1601,7 @@ static void dim_statement(void)
   accept (TOKENIZER_ARRAYVARIABLE);
 
   accept(TOKENIZER_LEFTPAREN);
-  size = expr();
+  size = relation();
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   size = fixedpt_toint( size );
 #endif
@@ -1610,9 +1661,9 @@ static void for_statement(void)
   for_variable = tokenizer_variable_num();
   accept(TOKENIZER_VARIABLE);
   accept(TOKENIZER_EQ);
-  ubasic_set_variable(for_variable, expr());
+  ubasic_set_variable(for_variable, relation());
   accept(TOKENIZER_TO);
-  to = expr();
+  to = relation();
 
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   VARIABLE_TYPE step = FIXEDPT_ONE;
@@ -1622,7 +1673,7 @@ static void for_statement(void)
   if (tokenizer_token() == TOKENIZER_STEP)
   {
     accept(TOKENIZER_STEP);
-    step = expr();
+    step = relation();
   }
   accept_cr();
 
@@ -1655,7 +1706,7 @@ static void end_statement(void)
 static void sleep_statement(void)
 {
   accept(TOKENIZER_SLEEP);
-  VARIABLE_TYPE f = expr();
+  VARIABLE_TYPE f = relation();
   if (f > 0)
   {
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
@@ -1675,7 +1726,10 @@ static void sleep_statement(void)
 static void tic_statement(void)
 {
   accept(TOKENIZER_TIC);
-  VARIABLE_TYPE f = expr();
+
+  accept(TOKENIZER_LEFTPAREN);
+
+  VARIABLE_TYPE f = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
     f = fixedpt_toint(f);
   #endif
@@ -1693,6 +1747,7 @@ static void tic_statement(void)
   else
     ubasic_script_tic0_ms = 0;
 
+  accept(TOKENIZER_RIGHTPAREN);
   accept_cr();
 }
 #endif
@@ -1737,7 +1792,7 @@ static void input_statement_wait (void)
     accept(TOKENIZER_ARRAYVARIABLE);
 
     accept(TOKENIZER_LEFTPAREN);
-    input_array_index = expr();
+    input_array_index = relation();
     #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
     input_array_index = fixedpt_toint( input_array_index );
     #endif
@@ -1753,7 +1808,7 @@ static void input_statement_wait (void)
   if(tokenizer_token() == TOKENIZER_COMMA)
   {
     accept(TOKENIZER_COMMA);
-    VARIABLE_TYPE r = expr();
+    VARIABLE_TYPE r = relation();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
     r = fixedpt_toint( r );
   #endif
@@ -1824,7 +1879,7 @@ static void serial_input_completed(void)
 /*---------------------------------------------------------------------------*/
 static void while_statement(void)
 {
-  uint8_t r;
+  VARIABLE_TYPE r;
   int8_t  while_cntr;
   uint16_t while_offset;
 
@@ -1843,42 +1898,55 @@ static void while_statement(void)
   // this makes sure that the jump to the same while is ignored
   if ( (while_stack_ptr == 0)  ||
         ( (while_stack_ptr > 0) &&
-        (while_stack[while_stack_ptr-1] != while_offset) ) )
+        (while_stack[while_stack_ptr-1].line_while != while_offset) ) )
   {
-    while_stack[while_stack_ptr] = while_offset;
+    while_stack[while_stack_ptr].line_while = while_offset;
+    while_stack[while_stack_ptr].line_after_endwhile = -1; // we don't know it yet
     while_stack_ptr++;
   }
 
   r = relation();
 
-  if(while_stack_ptr > 0)
+  if(while_stack_ptr==0)
   {
-    if(!r)
-    {
-      while_cntr=0;
-      while((tokenizer_token() != TOKENIZER_ENDWHILE  || while_cntr ) &&
-             tokenizer_token() != TOKENIZER_ENDOFINPUT)
-      {
-        if (tokenizer_token() == TOKENIZER_WHILE)
-          while_cntr+=1;
-        if (tokenizer_token() == TOKENIZER_ENDWHILE)
-          while_cntr-=1;
-        tokenizer_next();
-      }
-      while_stack_ptr--;
-      accept(TOKENIZER_ENDWHILE);
-      accept(TOKENIZER_EOL);
-    }
-    else
-    {
-      accept_cr();
-    }
+    tokenizer_error_print(TOKENIZER_WHILE);
+    ubasic_status.bit.isRunning = 0;
+    ubasic_status.bit.Error = 1;
     return;
   }
 
-  tokenizer_error_print(TOKENIZER_WHILE);
-  ubasic_status.bit.isRunning = 0;
-  ubasic_status.bit.Error = 1;
+  if (r)
+  {
+    accept_cr();
+    return;
+  }
+
+  if (while_stack[while_stack_ptr-1].line_after_endwhile > 0)
+  {
+    // we have traversed while loop once to its end already.
+    // thus we know where the loop ends. we just use that to jump there.
+    tokenizer_jump_offset(while_stack[while_stack_ptr-1].line_after_endwhile);
+  }
+  else
+  {
+    // first time the loop is entered the condition is not satisfied,
+    // so we gobble the lines until we reach the matching endwhile
+    while_cntr=0;
+    while ( (tokenizer_token() != TOKENIZER_ENDWHILE  || while_cntr ) &&
+             (tokenizer_token() != TOKENIZER_ENDOFINPUT)  )
+    {
+      if (tokenizer_token() == TOKENIZER_WHILE)
+        while_cntr+=1;
+      if (tokenizer_token() == TOKENIZER_ENDWHILE)
+        while_cntr-=1;
+      tokenizer_next();
+    }
+    while_stack_ptr--;
+    accept(TOKENIZER_ENDWHILE);
+    accept(TOKENIZER_EOL);
+  }
+
+  return;
 }
 /*---------------------------------------------------------------------------*/
 static void endwhile_statement(void)
@@ -1887,7 +1955,11 @@ static void endwhile_statement(void)
   if(while_stack_ptr > 0)
   {
     // jump_line(while_stack[while_stack_ptr-1]);
-    tokenizer_jump_offset(while_stack[while_stack_ptr-1]);
+    if (while_stack[while_stack_ptr-1].line_after_endwhile==-1)
+    {
+      while_stack[while_stack_ptr-1].line_after_endwhile = tokenizer_save_offset();
+    }
+    tokenizer_jump_offset(while_stack[while_stack_ptr-1].line_while);
     return;
   }
 
@@ -1902,7 +1974,7 @@ static void endwhile_statement(void)
 /*---------------------------------------------------------------------------*/
 static void statement(void)
 {
-  uint8_t token = tokenizer_token();
+  VARIABLE_TYPE token = tokenizer_token();
   uint8_t println=0;
 
   if (ubasic_status.bit.Error)
@@ -2006,6 +2078,10 @@ static void statement(void)
 #ifdef UBASIC_SCRIPT_HAVE_PWM_CHANNELS
     case TOKENIZER_PWM:
       pwm_statement();
+      break;
+
+    case TOKENIZER_PWMCONF:
+      pwmconf_statement();
       break;
 #endif
 
@@ -2121,6 +2197,10 @@ uint8_t ubasic_execute_statement(char * stmt)
 }
 
 /*---------------------------------------------------------------------------*/
+uint8_t ubasic_waiting_for_input(void)
+{
+  return (ubasic_status.bit.WaitForSerialInput);
+}
 
 uint8_t ubasic_finished(void)
 {

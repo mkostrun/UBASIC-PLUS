@@ -51,6 +51,7 @@ void ubasic_clear_variables();
 void ubasic_run_program(void);
 uint8_t ubasic_execute_statement(char * statement);
 uint8_t ubasic_finished(void);
+uint8_t ubasic_waiting_for_input(void);
 
 VARIABLE_TYPE ubasic_get_variable(uint8_t varnum);
 void ubasic_set_variable(uint8_t varum, VARIABLE_TYPE value);
