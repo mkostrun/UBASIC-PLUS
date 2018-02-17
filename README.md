@@ -72,7 +72,7 @@ by Ivan Voras and Tim Hartnick, https://sourceforge.net/projects/fixedptc.
 The libary is enhanced with str_fixedpt function, which converts a string to fixed point float.
 
 - flow control
-  - two character logical operators supported (<>,<=,>=,==,&&,||)
+  - more logical operators supported (<>,<=,>=,==,&&,||,!)
   - complex logical expressions supported with use of brackets
   - multi-line If/then/else/endif-command (CHDK-style)
   - while/endwhile
@@ -180,6 +180,42 @@ the analog inputs for some microcontrollers is given in hardware examples below.
 Some channels may not be available.
 
 
+*Command Line Interface* to uBasic-Plus
+
+Besides interpreter CLI is provided that supports the following commands:
+
+- *prog*
+
+  The CLI enters the line input mode. Everything entered on the serial port is considered
+as a sequential line in the script.
+
+- *run*
+
+  The CLI executes what ever has been assembled from multiple inputs as a BASIC script.
+
+- *cat*
+
+  Print the script that has been assembed so far.
+
+- *save*
+
+  exit the *prog* mode.
+
+- *edit*
+
+  enter the *prog* mode. Subsequent lines of input will be attached to already existing
+script.
+
+- *demo N*
+
+  execute demo script number N.
+
+- If in *prog* mode, every typed line is added to the script until *save* or *run* is
+executed.
+
+- If not in *prog* mode, every typed line is executed as its own script, but the
+uBasic-Plus internal storage is not erased in between the executions.
+
 The uBasic-Plus comprise of six files config.h, fixedptc.h, tokenizer.c,
 tokenizer.h, ubasic.c  and  ubasic.h.
 As an example implementation of the hardware related functions (random number generation,
@@ -187,10 +223,10 @@ gpio, hardware events, sleep and tic/toc) the development boards STM32F030-Nucle
 STM32F051-Discovery are used in combination with CubeMX created system libraries.
 
 
-## UBASIC PLUS SCRIPT EXAMPLES
+## UBASIC PLUS SCRIPT DEMOS
 
 
-### 1st example - warm up
+### Demo 1 - warm up
 ```
 println 'start of test 1';
 gosub label1;
@@ -206,7 +242,7 @@ println 'subroutine';
 return;
 ```
 
-### 2nd example by David Mitchell for his 'uBasic with strings'
+### Demo 2 - based on an example by David Mitchell for his 'uBasic with strings'
 ```
 println 'start of test 2';
 a$= 'abcdefghi';
@@ -237,7 +273,7 @@ println 'end of test 2';
 end;
 ```
 
-### 3rd example - demonstration of Plus capabilities
+### Demo 3 - uBasic-Plus is here
 ```
 println 'start of test 3';
 tic(1);
@@ -297,7 +333,7 @@ println 'end of test 3';
 end;
 ```
 
-### 4th example - input array entries in 10 sec time
+### Demo 4 - input array entries in 10 sec time
 ```
 println 'start of test 4';
 dim a@(5);
@@ -313,7 +349,7 @@ println 'end of test 4';
 end
 ```
 
-### 5th example - analog read with arrays
+### Demo 5 - analog read with arrays
 ```
 println 'start of test 5';
 for i = 1 to 100;
@@ -333,13 +369,13 @@ println 'end of test 5';
 end;
 ```
 
-### 6th example - if/then/else/endif and while/endwhile
+### Demo 6th - if/then/else/endif and while/endwhile
 ```
 println 'start of test 6';
 println 'Test If:';
 for i=1 to 10 step 0.125;
   x = uniform;
-  if x>0.5 then;
+  if (x>0.5) then;
     println x, 'is greater then 0.5';
   else;
     println x, 'is smaller then 0.5';
@@ -347,7 +383,7 @@ for i=1 to 10 step 0.125;
   println i;
 next i;
 println 'Test While:';
-while i>=0;
+while (i>=0);
   i = i - 0.125;
   println 'i =', i;
 endwhile;
@@ -356,7 +392,7 @@ end
 ```
 
 
-## UBASIC PLUS HARDWARE IMPLEMENTATION EXAMPLES
+## UBASIC PLUS HARDWARE SUPPORT
 
 For both boards a TX with circular buffer was implemented and tested.
 These files are provided in the Drivers/HAL.. directory and are the
