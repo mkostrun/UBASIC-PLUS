@@ -90,10 +90,10 @@ and serial-read have to be supplied - see documentation in *config.h*
   next i;
   ```
   In this example code expects 5 array entries to be entered through serial port, and
-waits at most 10sec for inputting each to complete.
+waits at most 10sec for each input to complete.
 
 - println
-      at the end of printout add an empty line '\n'
+  Same as *print* but adds an empty line at the end.
 
 - *sleep(f)*,
       where f is fixed point number in seconds. sleep is NOT executed inside the BASIC interpreter
