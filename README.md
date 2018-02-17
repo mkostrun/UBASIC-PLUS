@@ -91,19 +91,20 @@ and serial-read have to be supplied - see documentation in *config.h*
   ```
   In this example code expects 5 array entries to be entered through serial port, and
 waits at most 10sec for each input to complete.
-In the scripts or from the input line the numbers can be entered either directly as,
+In the scripts or from the input line the numbers can be entered either directly
+as hex values,
   ```
   ... x = 0xaabbccdd
   ```
-  or
+  or as binary values,
   ```
   ... x = 0b1101001
   ```
-  or
+  or as decimal values,
   ```
   ... x = 123456[d,D,L,l]
   ```
-  if default conversion to fixed point float is not needed.
+  if the default fixed point float is not desired.
 
 
 - *println*
