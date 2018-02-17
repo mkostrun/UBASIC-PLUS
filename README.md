@@ -51,26 +51,33 @@ available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasi
 uBasic Plus combines 'uBasic with strings' with elements of 'CHDK' version of uBasic.
 For CHDK please see http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
 It adds the following functionalities:
+
 - No more line numbers:
-  Instead CHDK-style labels are used, *  :some_label  * . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
-inside quotation marks. Also, internally the lines are not numbered,
+Instead CHDK-style labels are used, *  :some_label  * . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
+inside quotation marks. Labels can use '_' in their names.
+Also, internally the lines are not numbered,
 rather pointers are used, so returns - from gosub, for/next, if/then/else, while/endwhile -
 are very fast as there are no line searches.
-- config.h, configuration which allows user to select which of the features below
+
+- Strings can be encompassed by single or double quotations. Tokenizer can identify labels.
+
+- End of line characters * '\n' * and * ';' *
+
+- * config.h *, configuration which allows user to select which of the features below
 (if any) they want in their uBasic build.
+
 - Fixep point floats are implemented through Fixed Point Math Library for C
 by Ivan Voras and Tim Hartnick, https://sourceforge.net/projects/fixedptc.
 The libary is enhanced with str_fixedpt function, which converts a string to fixed point float.
+
 - flow control
   - two character logical operators supported (<>,<=,>=,==,&&,||)
   - complex logical expressions supported with use of brackets
-  - multi-line If-command (CHDK-style)
+  - multi-line If/then/else/endif-command (CHDK-style)
   - while/endwhile
-- Strings can be encompassed by single or double quotations
-- Besides '\n', ';' can also be used as end-of-line character
+
 - println
       at the end of printout add an empty line '\n'
-- Two character logical operators are also implemented 
 - 26 fixed point arrays, named a@ to z@, dynamically allocated using DIM command,
 and accessed through index, e.g., a@(i)
 - *sleep(f)*,
