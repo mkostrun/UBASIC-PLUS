@@ -428,9 +428,11 @@ end
 
 ## UBASIC PLUS HARDWARE SUPPORT
 
-For both boards a TX with circular buffer was implemented and tested.
-These files are provided in the Drivers/HAL.. directory and are the
-same for both boards.
+- STM32F0
+
+  For both boards a HAL UART library with RX using circular buffer was implemented and tested.
+The library provides Arduino-type serial-available and serial-read functions. The library is
+the same for both STM32F0 boards.
 
 
 ### STM32F030R8-Nucleo64
@@ -453,8 +455,6 @@ About the board:
 
   through USB connector used for debugging (UART2 on PA2/PA3)
 
-- firmware footprint with all features enabled and 6 test scripts (bytes):
-  32080 flash, 552 data, 2768 bss.
 
 ### STM32F051R8-Discovery
 
@@ -477,5 +477,7 @@ About the board:
 
   requires an additional USB/TTL cable (UART2 using PA2/PA3 on the discovery board)
 
-- firmware footprint with all features enabled and 7 test scripts (bytes):
-  32416 flash, 556 data, 2828 bss.
+
+
+Firmware footprint with all features enabled and 8 test scripts (bytes):
+34328 flash, 556 data and 2844 bss.
