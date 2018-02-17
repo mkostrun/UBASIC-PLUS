@@ -91,6 +91,20 @@ and serial-read have to be supplied - see documentation in *config.h*
   ```
   In this example code expects 5 array entries to be entered through serial port, and
 waits at most 10sec for each input to complete.
+In the scripts or from the input line the numbers can be entered either directly as,
+  ```
+  ... x = 0xaabbccdd
+  ```
+  or
+  ```
+  ... x = 0b1101001
+  ```
+  or
+  ```
+  ... x = 123456[d,D,L,l]
+  ```
+  if default conversion to fixed point float is not needed.
+
 
 - *println*
 
@@ -127,7 +141,7 @@ This is not executed inside the BASIC interpreter.
   direct control over digital pins. Tied to hardware specific functions as described in config.h
 
   
-- *pwm(channel,value), pwm(channel)*
+- *pwm_conf(prescaler,period), pwm(channel,value), pwm(channel)*
 
   direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
 
@@ -149,19 +163,6 @@ available.
   will set the channel 1 gpio to 1 from the command line.
 - *does not fit in anything above*
 
-  In the scripts the numbers can be entered either directly as,
-  ```
-  ... x = 0xaabbccdd
-  ```
-  or
-  ```
-  ... x = 0b1101001
-  ```
-  or
-  ```
-  ... x = 123456[d,D,L,l]
-  ```
-  if default conversion to fixed point integer is not needed.
 
   The values can be printed directly as
   ```
