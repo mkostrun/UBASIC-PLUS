@@ -180,7 +180,7 @@ the analog inputs for some microcontrollers is given in hardware examples below.
 Some channels may not be available.
 
 
-*Command Line Interface* to uBasic-Plus
+## *Command Line Interface* to uBasic-Plus
 
 Besides interpreter CLI is provided that supports the following commands:
 
