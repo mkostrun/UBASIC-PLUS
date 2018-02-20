@@ -152,9 +152,11 @@ the internal temperature sensor. From multiple calls required number of random b
   fixed point float to fixed point integer arithmetic functions.
 
 
-- *gpio(pin,state), a=gpio(pin)*
+- *pinmode(pin,mode,speed), a=dread(pin), dwrite(pin,state)*
 
-  Allows direct control over digital pins.
+  Allows direct control over digital pins. The pin designation follows their hardware
+names, 0xa0:0xaf for pins 0 through 15 on port A, and so forth. It is up to user to verify
+that particular pins are available for digital read/write operations.
 Tied to hardware specific functions as described in *config.h* .
 
 
@@ -306,15 +308,18 @@ println 'ceil(x)=' ceil(x)
 println 'round(x)=' round(x)
 println 'x^3=' pow(x,3)
 next i
-println 'GPIO 1:4 Test'
-for i = 1 to 1
+println 'Digital Write Test'
+pinmode(0xc0,-1,0)
+pinmode(0xc1,-1,0)
+pinmode(0xc2,-1,0)
+pinmode(0xc3,-1,0)
 for j = 0 to 2
-gpio(i,(j % 2))
-sleep(0.5)
+  dwrite(0xc0,(j % 2))
+  dwrite(0xc1,(j % 2))
+  dwrite(0xc2,(j % 2))
+  dwrite(0xc3,(j % 2))
+  sleep(0.5)
 next j
-next i
-println 'gpio(1)=' gpio(1)
-println 'gpio(2)=' gpio(2)
 println 'Press the Blue Button or type kill!'
   :presswait \
 if hw_event(1)=0 then goto presswait
