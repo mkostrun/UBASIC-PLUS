@@ -145,6 +145,8 @@ fixedpt_div(fixedpt A, fixedpt B)
 #include <stdlib.h>
 static inline fixedpt str_fixedpt(char * p, uint8_t plen, uint8_t decimal_places)
 {
+  uint8_t i_minus = *p == '-' ? 1 : 0;
+
   fixedpt rval = fixedpt_fromint(atoi(p));
 
   // find '.': the number is float because it has at least one
@@ -169,7 +171,10 @@ static inline fixedpt str_fixedpt(char * p, uint8_t plen, uint8_t decimal_places
       fpow10 *= 10;
       idec++;
     }
-    rval += (f<<FIXEDPT_FBITS)/fpow10;
+    if (i_minus)
+      rval -= (f<<FIXEDPT_FBITS)/fpow10;
+    else
+      rval += (f<<FIXEDPT_FBITS)/fpow10;
   }
 
   return rval;

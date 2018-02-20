@@ -666,7 +666,7 @@ static VARIABLE_TYPE factor(void)
       accept(TOKENIZER_POWER);
       accept(TOKENIZER_LEFTPAREN);
       // argument:
-      i =relation();
+      i = relation();
       accept(TOKENIZER_COMMA);
       // exponent
       j = relation();
@@ -796,30 +796,6 @@ static VARIABLE_TYPE factor(void)
       break;
 #endif /* #if defined(VARIABLE_TYPE_FLOAT_AS ... */
 
-#if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
-    case TOKENIZER_GPIO:
-      accept(TOKENIZER_GPIO);
-      accept(TOKENIZER_LEFTPAREN);
-      // first argument: channel
-      r = relation();
-  #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-      r = fixedpt_toint(r);
-  #endif
-      if (r>0 && r<=UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
-      {
-        DIGIO_ConfGpio(r,0,-1); /*2nd arg: 0-Input, 1-Output; 3rd arg: pull=-1-down,0-no pull,+1-up*/
-        DIGIO_GetSetGpio(r);
-        r = fixedpt_fromint(digio_in_ch[r-1]);
-      }
-      else
-        r = -1;
-  #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-      r = fixedpt_fromint(r);
-  #endif
-      accept(TOKENIZER_RIGHTPAREN);
-      break;
-#endif
-
     case TOKENIZER_INT:
       r = tokenizer_int();
       accept(TOKENIZER_INT);
@@ -868,17 +844,10 @@ static VARIABLE_TYPE factor(void)
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       j = fixedpt_toint(j);
   #endif
-      if (!SelectChannelADC(j))
-      {
-        r = AnalogRead(8);
-      }
-      else
-      {
-        r = -1;
-      }
-#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+      r = analogRead(j);
+  #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_fromint(r);
-#endif
+  #endif
       accept(TOKENIZER_RIGHTPAREN);
       break;
 #endif
@@ -902,6 +871,15 @@ static VARIABLE_TYPE factor(void)
       r = ubasic_get_arrayvariable(varnum , (uint16_t) j);
       break;
 #endif
+
+#if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
+    case TOKENIZER_DREAD:
+      accept(TOKENIZER_LEFTPAREN);
+      r = relation();
+      r = digitalRead(r);
+      accept(TOKENIZER_RIGHTPAREN);
+      break;
+#endif /* UBASIC_SCRIPT_HAVE_GPIO_CHANNELS */
 
 
     default:
@@ -1163,7 +1141,7 @@ static void pwm_statement(void)
 
   if (j>=1 && j<=UBASIC_SCRIPT_HAVE_PWM_CHANNELS)
   {
-    pwm_UpdateDutyCycle(j, r);
+    analogWrite(j, r);
   }
 
   accept_cr();
@@ -1190,7 +1168,7 @@ static void pwmconf_statement(void)
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   r = fixedpt_toint(r);
 #endif
-  pwm_Config(j,r);
+  analogWriteConfig(j,r);
   r = 0;
   accept(TOKENIZER_RIGHTPAREN);
   accept_cr();
@@ -1199,48 +1177,107 @@ static void pwmconf_statement(void)
 
 #endif
 
-#if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
-static void gpio_statement(void)
+#if defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
+static void areadconf_statement(void)
 {
   VARIABLE_TYPE j,r;
 
-  accept(TOKENIZER_GPIO);
+  accept(TOKENIZER_AREADCONF);
+  accept(TOKENIZER_LEFTPAREN);
+  // first argument: sampletime 0...7 on STM32
+  j = relation();
+#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+  j = fixedpt_toint(j);
+#endif
+  if (j<0)
+    j = 0;
+  if (j>7)
+    j = 7;
+  accept(TOKENIZER_COMMA);
+  r = relation();
+  // second argument: number of analog sample to average from 
+#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+  r = fixedpt_toint(r);
+#endif
+  r = analogReadConfig(j,r);
+  accept(TOKENIZER_RIGHTPAREN);
+  accept_cr();
+}
+#endif
 
+#if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
+static void pinmode_statement(void)
+{
+  VARIABLE_TYPE i,j,r;
+  accept(TOKENIZER_PINMODE);
   accept(TOKENIZER_LEFTPAREN);
 
-  // first argument: channel
-  j = relation();
-  #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-  j = fixedpt_toint(j);
-  #endif
-  if (j <1 || j>UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
+  // channel - should be entered as 0x..
+  i = relation();
+  if (i < 0xa0 || i > 0xff)
     return;
 
   accept(TOKENIZER_COMMA);
 
-  // second argument: value
+  // mode
+  j = relation();
+
+#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+  j = fixedpt_toint(j);
+#endif
+
+  if (j<-2)
+    j = -1;
+  if (j>2)
+    j = 0;
+
+  accept(TOKENIZER_COMMA);
+
+  // speed
   r = relation();
-  #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   r = fixedpt_toint(r);
-  #endif
+#endif
+  if (r<0 || r>2)
+    r = 0;
 
   accept(TOKENIZER_RIGHTPAREN);
 
-  if (j>=1 && j<=UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
-  {
-    if (digio_out_ch[j-1]<0)
-    {
-      DIGIO_ConfGpio(j,1,0); /*2nd arg: 0-Input, 1-Output; 3rd arg: pull=-1-down,0-no pull,+1-up*/
-    }
-    digio_out_ch[j-1] = (r>0);
-    DIGIO_GetSetGpio(j);
-  }
+  pinMode((uint8_t) i, (int8_t) j, (int8_t) r);
 
   accept_cr();
 
   return;
 }
+
+
+static void dwrite_statemet(void)
+{
+  VARIABLE_TYPE i,j,r;
+  accept(TOKENIZER_DWRITE);
+  accept(TOKENIZER_LEFTPAREN);
+
+  j = relation();
+
+  accept(TOKENIZER_COMMA);
+
+  r = relation();
+  if (r)
+    r = 0x01;
+
+  accept(TOKENIZER_RIGHTPAREN);
+
+  r = digitalWrite(j,r);
+#if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
+  r = fixedpt_fromint(r);
 #endif
+
+  accept_cr();
+
+  return;
+}
+
+#endif /* UBASIC_SCRIPT_HAVE_ANALOG_READ */
 
 
 static void print_statement(uint8_t println)
@@ -2085,14 +2122,25 @@ static void statement(void)
       break;
 #endif
 
-#if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
-    case TOKENIZER_GPIO:
-      gpio_statement();
+#if defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
+    case TOKENIZER_AREADCONF:
+      areadconf_statement();
       break;
 #endif
 
+#if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
+    case TOKENIZER_PINMODE:
+      pinmode_statement();
+      break;
+
+    case TOKENIZER_DWRITE:
+      dwrite_statemet();
+      break;
+
+#endif /* UBASIC_SCRIPT_HAVE_GPIO_CHANNELS */
+
     default:
-      tokenizer_error_print(TOKENIZER_ERROR);
+      tokenizer_error_print(token);
       ubasic_status.bit.isRunning = 0;
       ubasic_status.bit.Error = 1;
   }
@@ -2121,6 +2169,8 @@ static void numbered_line_statement(void)
 void ubasic_run_program(void)
 {
   if (ubasic_status.bit.isRunning==0)
+    return;
+  if (ubasic_status.bit.Error==1)
     return;
 
 #if defined(UBASIC_SCRIPT_HAVE_SLEEP)

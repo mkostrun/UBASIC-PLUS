@@ -205,8 +205,8 @@ extern volatile uint32_t ubasic_script_sleeping_ms;
 // What it means to support PWM:
 #if defined(UBASIC_SCRIPT_HAVE_PWM_CHANNELS)
 extern int16_t dutycycle_pwm_ch[UBASIC_SCRIPT_HAVE_PWM_CHANNELS];
-void pwm_Config (uint16_t psc, uint16_t per);
-void pwm_UpdateDutyCycle(uint8_t ch, int16_t dutycycle);
+void analogWriteConfig(uint16_t psc, uint16_t per);
+void analogWrite(uint8_t ch, int16_t dutycycle);
 #endif
 
 
@@ -234,10 +234,9 @@ extern volatile uint8_t pb_status, hw_event;
 
 
 #if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
-void DIGIO_ConfGpio(uint8_t ch, uint8_t mode, int8_t pull);
-void DIGIO_GetSetGpio(uint8_t ch);
-extern int8_t digio_out_ch[UBASIC_SCRIPT_HAVE_GPIO_CHANNELS];
-extern int8_t digio_in_ch[UBASIC_SCRIPT_HAVE_GPIO_CHANNELS];
+void    pinMode(uint8_t ch, int8_t mode, uint8_t freq);
+int8_t  digitalWrite(uint8_t ch, uint8_t PinState);
+int8_t  digitalRead(uint8_t ch);
 #endif
 
 
@@ -258,8 +257,8 @@ extern uint8_t ubasic_script_wait_for_input_expired;
 #if defined(UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR) || defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
 uint32_t  RandomUInt32(uint8_t size);
 #if defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
-uint8_t   SelectChannelADC(uint8_t channel);
-uint16_t  AnalogRead(uint8_t nreads);
+uint8_t analogReadConfig(uint8_t sampletime, uint8_t nreads);
+int16_t analogRead(uint8_t channel);
 #endif /* UBASIC_SCRIPT_HAVE_ANALOG_READ */
 #endif /* UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR || UBASIC_SCRIPT_HAVE_ANALOG_READ */
 

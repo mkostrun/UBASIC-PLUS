@@ -91,7 +91,6 @@ static const struct keyword_token keywords[] =
   {"gosub ", TOKENIZER_GOSUB},
   {"return", TOKENIZER_RETURN},
   {"end", TOKENIZER_END},
-// CHDK inspired additions: Start
 #if defined(UBASIC_SCRIPT_HAVE_SLEEP)
   {"sleep", TOKENIZER_SLEEP},
 #endif
@@ -124,19 +123,21 @@ static const struct keyword_token keywords[] =
   {"pow", TOKENIZER_POWER},
 #endif
 #if defined(UBASIC_SCRIPT_HAVE_GPIO_CHANNELS)
-  {"gpio", TOKENIZER_GPIO},
+  {"pinmode", TOKENIZER_PINMODE},
+  {"dread", TOKENIZER_DREAD},
+  {"dwrite", TOKENIZER_DWRITE},
 #endif
 #ifdef UBASIC_SCRIPT_HAVE_PWM_CHANNELS
-  {"pwm_conf", TOKENIZER_PWMCONF},
-  {"pwm", TOKENIZER_PWM},
+  {"awrite_conf", TOKENIZER_PWMCONF},
+  {"awrite", TOKENIZER_PWM},
 #endif
 #if defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
+  {"aread_conf", TOKENIZER_AREADCONF},
   {"aread", TOKENIZER_AREAD},
 #endif
   {"hex ", TOKENIZER_PRINT_HEX},
   {"dec ", TOKENIZER_PRINT_DEC},
   { ":", TOKENIZER_COLON},
-// CHDK inspired additions: End
   {NULL, TOKENIZER_ERROR}
 };
 
@@ -293,7 +294,7 @@ static uint8_t get_next_token(void)
       nextptr++;
     return TOKENIZER_INT;
   }
-  else if( isdigit(*ptr) || (*ptr=='.') )
+  else if( isdigit(*ptr) || (*ptr=='.') || (*ptr=='-') )
   {
     // is it
     //    FLOAT (digits with at most one decimal point)
@@ -302,8 +303,15 @@ static uint8_t get_next_token(void)
     nextptr = ptr;
     have_decdot = 0;
     i_dot = 0;
+    if (*nextptr == '-')
+    {
+      nextptr++;
+    }
     while (1)
     {
+      if (*nextptr == '-')
+        return TOKENIZER_ERROR;
+
       if (*nextptr>='0' && *nextptr<='9')
       {
         nextptr++;
@@ -501,8 +509,15 @@ void tokenizer_next(void)
 
 VARIABLE_TYPE tokenizer_num(void)
 {
-  uint8_t *c = (uint8_t *) ptr;
+  uint8_t *c = (uint8_t *) ptr, i_minus=0;
   VARIABLE_TYPE rval=0;
+
+  if (*c=='-')
+  {
+    c++;
+    i_minus = 1;
+  }
+
   while (1)
   {
     if (*c<'0' || *c>'9')
@@ -512,7 +527,11 @@ VARIABLE_TYPE tokenizer_num(void)
     rval += (*c - '0');
     c++;
   }
-  return rval;
+
+  if (i_minus)
+    return -rval;
+  else
+    return rval;
 }
 
 
