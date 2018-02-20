@@ -173,9 +173,11 @@ Tied to hardware specific functions as described in *config.h* .
 
     0 for low, 1 for medium and 2 for high frequency.
 
-- *awrite_conf(prescaler,period), awrite(channel,value)*
+- *awrite_conf(prescaler,period), awrite(channel,value), awrite(channel)*
 
-  direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
+  direct control over output pins that support PWM on the micro-controller.
+The *value* has to be in the range 0 to *period*-1.
+Tied to hardware functions described in config.h
 
 
 - *i = hw_event(channel)*
@@ -273,7 +275,7 @@ println 'subroutine'
 return
 ```
 
-### Demo 2 - based on an example by David Mitchell for his 'uBasic with strings'
+### Demo 2 - 'uBasic with strings' by David Mitchell
 ```
 println 'Demo 2';
 a$= 'abcdefghi';
