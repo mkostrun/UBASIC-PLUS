@@ -106,7 +106,7 @@ for i = 1 to 2;\
   println 'k=' k;\
 next i;\
 :repeat \
-if toc(1)<=300 then goto repeat;\
+  if toc(1)<=300 then goto repeat;\
 for i = 1 to 2;\
 println 'ran(' i ')=' ran;\
 next i;\
@@ -121,22 +121,25 @@ println 'ceil(x)=' ceil(x);\
 println 'round(x)=' round(x);\
 println 'x^3=' pow(x,3);\
 next i;\
-println 'GPIO 1:4 Test';\
-for i = 1 to 1;\
+println 'Digital Write Test';\
+pinmode(0xc0,-1,0);\
+pinmode(0xc1,-1,0);\
+pinmode(0xc2,-1,0);\
+pinmode(0xc3,-1,0);\
 for j = 0 to 2;\
-gpio(i,(j % 2));\
-sleep(0.5);\
+  dwrite(0xc0,(j % 2));\
+  dwrite(0xc1,(j % 2));\
+  dwrite(0xc2,(j % 2));\
+  dwrite(0xc3,(j % 2));\
+  sleep(0.5);\
 next j;\
-next i;\
-println 'gpio(1)=' gpio(1);\
-println 'gpio(2)=' gpio(2);\
 println 'Press the Blue Button or type kill!';\
 :presswait \
-if hw_event(1)=0 then goto presswait;\
+  if hw_event(1)=0 then goto presswait;\
 tic(1);\
 println 'Blue Button pressed!';\
 :deprwait \
-if hw_event(2)=0 then goto deprwait;\
+  if hw_event(2)=0 then goto deprwait;\
 println 'duration =' toc(1);\
 println 'Blue Button de-pressed!';\
 println 'Demo 3 Completed';\
@@ -158,6 +161,7 @@ end",
 
 "\
 println 'Demo 5 - analog inputs and arrays';\
+aread_conf(7,16);\
 for i = 1 to 100;\
   x = aread(16);\
   y = aread(17);\
@@ -212,24 +216,24 @@ goto startover;\
 end",
 
 "\
-println 'Demo 8: PWM 4-Channel Test';\
+println 'Demo 8: analog write (PWM) 4-Channel Test';\
 p = 65536;\
 for k = 1 to 10;\
   p = p/2;\
-  pwm_conf(p,4096);\
+  awrite_conf(p,4096);\
   println 'prescaler = ' p;\
   for i = 1 to 10;\
     for j = 1 to 4;\
-      pwm(j,4095*uniform);\
+      awrite(j,4095*uniform);\
     next j;\
-    println '    pwm=' pwm(1),pwm(2),pwm(3),pwm(4);\
+    println '    analog write = ' awrite(1),awrite(2),awrite(3),awrite(4);\
     sleep(5);\
   next i;\
 next k;\
-pwm(1,0);\
-pwm(2,0);\
-pwm(3,0);\
-pwm(4,0);\
+awrite(1,0);\
+awrite(2,0);\
+awrite(3,0);\
+awrite(4,0);\
 end"
 };
 
@@ -240,7 +244,8 @@ end"
 char welcome_msg[]=
 "\
 Welcome to uBasic-Plus for STM32 by M.Kostrun\n\
-Based on uBasic by A.Dunkels, uBasic with string by D.Mitchell and CHDK\n>";
+Expands upon uBasic by A.Dunkels, uBasic with string by D.Mitchell,\n\
+and uBasic for CHDK by Pablo d'Angelo\n>";
 /* USER CODE BEGIN PV */
 /* USER CODE END PV */
 
@@ -261,8 +266,6 @@ char statement[64];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint32_t counter=0;
-  uint32_t time_last_ms = HAL_GetTick();
   /* USER CODE END 1 */
 
   /* BASIC VARS BEGIN */
@@ -299,27 +302,11 @@ int main(void)
   BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_EXTI);
 
 
-  for (uint8_t i=0; i<1; i++)
-  {
-    ubasic_load_program( program[6] );
-    ubasic_clear_variables();
-    do
-    {
-      ubasic_run_program();
-    }
-    while(!ubasic_finished());
-  }
-
-  while(1)
-  {;}
-
   print_serial(welcome_msg);
-
-
-
   while (1)
   {
-    if ((cli_state == UBASIC_CLI_LOADED)||(cli_state == UBASIC_CLI_RUNNING))
+    if ( (cli_state == UBASIC_CLI_LOADED) ||
+          (cli_state == UBASIC_CLI_RUNNING) )
     {
       ubasic_run_program();
       cli_state = UBASIC_CLI_RUNNING;
