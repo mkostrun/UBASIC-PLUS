@@ -154,7 +154,11 @@ the internal temperature sensor. From multiple calls required number of random b
 
 - *pinmode(pin,mode,speed), a=dread(pin), dwrite(pin,state)*
 
-  Allows direct control over digital pins. The pin designation follows their hardware
+  Allows direct control over digital pins.
+
+  - pin: 
+
+    The pin designation follows their hardware
 names, 0xa0:0xaf for pins 0 through 15 on port A, and so forth. It is up to user to verify
 that particular pins are available for digital read/write operations.
 Tied to hardware specific functions as described in *config.h* .
@@ -187,7 +191,7 @@ Some channels may not be available.
 
 ## *Command Line Interface* to uBasic-Plus
 
-Besides interpreter CLI is provided that supports the following commands:
+The Command Line Interface (CLI) supports the following commands:
 
 - *prog*
 
