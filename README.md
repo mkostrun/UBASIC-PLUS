@@ -163,6 +163,12 @@ names, 0xa0:0xaf for pins 0 through 15 on port A, and so forth. It is up to user
 that particular pins are available for digital read/write operations.
 Tied to hardware specific functions as described in *config.h* .
 
+  - mode: STM32 specific
+
+    Output: -2 for open drain, -1 for push-pull
+
+    Input:  0 for no pull, 1 for push-up, 2 for push-down.
+
 
 - *pwm_conf(prescaler,period), pwm(channel,value), pwm(channel)*
 
