@@ -191,6 +191,8 @@ gets set by external process. Importantly, after the interpreter recognizes that
 flag has been set, it immediately resets it so the subsequent calls will return 0
 until the flag is set again externally.
 
+  Importantly, while waiting for the flag, the microcontrolled does not sit inside the interpreter.
+
 - *aread_conf(duration,nreads), i = aread(channel)*
 
   Read input from analog channels 0:18 from the microcontroller. The pin assignments of
