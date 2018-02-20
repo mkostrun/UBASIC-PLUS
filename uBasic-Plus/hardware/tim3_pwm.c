@@ -33,11 +33,14 @@
 #include "main.h"
 
 /* USER CODE BEGIN 0 */
+TIM_HandleTypeDef htim3;
+
+TIM_OC_InitTypeDef sConfigOC;
+
 #define TIM3_PWM1_PSC 16
 #define TIM3_PWM1_PERIOD_CLK 4096
-
-TIM_HandleTypeDef htim3;
-TIM_OC_InitTypeDef sConfigOC;
+static uint16_t
+    tim3_pwm1_prescaler=0, tim3_pwm1_period_nclk=0;
 
 int16_t
     dutycycle_pwm_ch[4] = {-1,-1,-1,-1};
@@ -46,6 +49,50 @@ static uint8_t
     init_completed=0;
 
 /* USER CODE END 0 */
+/* TIM3 init function */
+void analogWriteConfig (uint16_t psc, uint16_t per)
+{
+  if ((tim3_pwm1_prescaler == psc) && (tim3_pwm1_period_nclk == per) && init_completed)
+    return;
+
+  if (init_completed)
+  {
+    if (HAL_TIM_PWM_DeInit(&htim3) != HAL_OK)
+    {
+      _Error_Handler(__FILE__, __LINE__);
+    }
+  }
+
+  GPIO_InitTypeDef GPIO_InitStruct;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  memset(&htim3, 0, sizeof(htim3));
+  memset(&sMasterConfig, 0, sizeof(sMasterConfig));
+  memset(&sConfigOC, 0, sizeof(sConfigOC));
+
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = psc;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = per;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  tim3_pwm1_prescaler = psc;
+  tim3_pwm1_period_nclk = per;
+  init_completed=1;
+}
+
 
 /* TIM3 init function */
 void pwm_Init(uint8_t ch)
@@ -57,33 +104,8 @@ void pwm_Init(uint8_t ch)
 
   if (!init_completed)
   {
-    TIM_MasterConfigTypeDef sMasterConfig;
-
-    memset(&htim3, 0, sizeof(htim3));
-    memset(&sMasterConfig, 0, sizeof(sMasterConfig));
-    memset(&sConfigOC, 0, sizeof(sConfigOC));
-
-    htim3.Instance = TIM3;
-    htim3.Init.Prescaler = TIM3_PWM1_PSC;
-    htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim3.Init.Period = TIM3_PWM1_PERIOD_CLK;
-    htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
-    {
-      _Error_Handler(__FILE__, __LINE__);
-    }
-
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
-    {
-      _Error_Handler(__FILE__, __LINE__);
-    }
-
-    init_completed=1;
+    analogWriteConfig (TIM3_PWM1_PSC, TIM3_PWM1_PERIOD_CLK);
   }
-
 
   if ( (ch==1) && (dutycycle_pwm_ch[0] < 0))
   {
@@ -178,10 +200,13 @@ void pwm_Init(uint8_t ch)
   }
 }
 
-void pwm_UpdateDutyCycle(uint8_t ch, int16_t dutycycle)
+void analogWrite(uint8_t ch, int16_t dutycycle)
 {
   if (dutycycle < 0)
+  {
+    HAL_TIM_PWM_Stop(&htim3, ch);
     return;
+  }
 
   if (dutycycle_pwm_ch[ch-1] < 0)
     pwm_Init(ch);

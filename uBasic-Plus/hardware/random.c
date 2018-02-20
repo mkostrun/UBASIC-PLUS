@@ -9,11 +9,6 @@
 
 #if defined(USE_STM32F0XX_NUCLEO) || defined(USE_STM32F4XX_NUCLEO) || defined(USE_STM32F0XX_DISCOVERY)
 
-#ifdef USE_STM32F0XX_NUCLEO
-#include "stm32f0xx_hal.h"
-#include "stm32f0xx_hal_conf.h"
-#endif
-
 #ifdef USE_STM32F0XX_DISCOVERY
 #include "stm32f0xx_hal_conf.h"
 #endif
@@ -59,7 +54,7 @@ void MX_CRC_Init(void)
 
 ADC_HandleTypeDef       hadc;
 ADC_ChannelConfTypeDef  sConfig;
-static uint8_t ch_prev = 0xff;
+static uint8_t ch_prev = 0xff, nreads=1, stime=0, stime_prev=8;
 
 
 void MX_ADC_Init(void)
@@ -113,75 +108,113 @@ void MX_ADC_Init(void)
   return;
 }
 
-
-uint8_t SelectChannelADC(uint8_t ch)
+uint8_t analogReadConfig(uint8_t stime, uint8_t nr)
 {
-  if (ch == ch_prev)
-    return 0;
+  if (nr)
+    nreads = nr;
 
-  sConfig.Rank = ADC_RANK_NONE;
-  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-    return 2;
-  sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-
-  if (ch == ADC_CHANNEL_TEMPSENSOR)
-  {
-    sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
-    sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-    goto _exit;
-  }
-  else if (ch==0x10)
-  {
-    sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
-  }
-  else if (ch==0x11)
-  {
-    sConfig.Channel = ADC_CHANNEL_VREFINT;
-  }
-#if defined(ADC_CHANNEL_VBAT)
-  else if (ch==0x12)
-  {
-    sConfig.Channel = ADC_CHANNEL_VBAT;
-  }
-#endif
-  else if (ch<0x10)
-  {
-    sConfig.Channel = ADC_CHSELR_CHANNEL(ch);
-  }
-  else
-    return 1;
-
-  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-
-_exit:
-
-  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-    return 2;
-
-  ch_prev = ch;
-  return 0;
+  stime = stime % 8; /* there are 8 sampling time options for STM32 */
+  return;
 }
 
 
-uint16_t AnalogRead()
+int16_t analogRead(uint8_t ch)
 {
-  uint16_t val=0;
+  int16_t val=0;
+  uint32_t dummy=0;
+  uint8_t i=0;
 
-  /* Start ADC1 Software Conversion */
-  if (HAL_ADC_Start(&hadc) != HAL_OK)
+  if (ch != ch_prev)
   {
-    Error_Handler();
+    // clear old configuration 
+    sConfig.Rank = ADC_RANK_NONE;
+    if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+      return -2;
+
+    // start new configuration
+    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+
+    if (ch<0x12)
+    {
+      sConfig.Channel = ch;
+    }
+#if defined(ADC_CHANNEL_VBAT)
+    else if (ch==0x12)
+    {
+      sConfig.Channel = ADC_CHANNEL_VBAT;
+    }
+#endif
+    else
+      return -1;
+
+    ch_prev = ch;
+    i = 1;
   }
 
-  /* wait for conversion complete */
-  while (!__HAL_ADC_GET_FLAG(&hadc, ADC_FLAG_EOC));
+  if (stime_prev != stime)
+  {
+    if (stime==0)
+    {
+      sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+    }
+    else if (stime==1)
+    {
+      sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
+    }
+    else if (stime==2)
+    {
+      sConfig.SamplingTime = ADC_SAMPLETIME_13CYCLES_5;
+    }
+    else if (stime==3)
+    {
+      sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES_5;
+    }
+    else if (stime==4)
+    {
+      sConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
+    }
+    else if (stime==5)
+    {
+      sConfig.SamplingTime = ADC_SAMPLETIME_55CYCLES_5;
+    }
+    else if (stime==6)
+    {
+      sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
+    }
+    else if (stime==7)
+    {
+      sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+    }
 
-  /* Two LS bits are most likely most random */
-  val = HAL_ADC_GetValue(&hadc) ;
+    stime_prev = stime;
+    i = 1;
+  }
 
-  //clear EOC flag
-  __HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_EOC);
+  if (i)
+  {
+    if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+      return -3;
+  }
 
+  /* Start ADC1 Software Conversion */
+  for (i=0; i<nreads; i++)
+  {
+    if (HAL_ADC_Start(&hadc) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* wait for conversion complete */
+    while (!__HAL_ADC_GET_FLAG(&hadc, ADC_FLAG_EOC));
+
+    /* Two LS bits are most likely most random */
+    dummy += HAL_ADC_GetValue(&hadc) ;
+
+    //clear EOC flag
+    __HAL_ADC_CLEAR_FLAG(&hadc, ADC_FLAG_EOC);
+  }
+
+  val = dummy / nreads;
   return val;
 }
 
@@ -190,7 +223,7 @@ uint32_t RandomUInt32(uint8_t size)
 {
   uint32_t val=0, temp_val=0;
 
-  SelectChannelADC(ADC_CHANNEL_TEMPSENSOR);
+  analogReadConfig(0,1); /* fastest readout, no averaging */
 
   for (uint8_t k=0; k<4; k++)
   {
@@ -198,7 +231,7 @@ uint32_t RandomUInt32(uint8_t size)
     for (uint8_t i=0; i<(size>>1); i++)
     {
       /* Two LS bits are most likely most random */
-      temp_val |= (AnalogRead(ADC_CHANNEL_TEMPSENSOR) & 0x00000003) << (2*i);
+      temp_val |= (analogRead(0x10) & 0x00000003) << (2*i);
     }
     val ^= temp_val;
   }

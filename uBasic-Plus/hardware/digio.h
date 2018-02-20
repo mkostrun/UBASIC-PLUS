@@ -20,11 +20,14 @@ extern "C" {
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
+void
+    pinMode(uint8_t ch, int8_t mode, uint8_t freq);
 
-void DIGIO_ConfGpio(uint8_t ch, uint8_t mode, int8_t pull);
-void DIGIO_GetSetGpio(uint8_t ch);
-extern int8_t digio_out_ch[4];
-extern int8_t digio_in_ch[4];
+int8_t
+    digitalWrite(uint8_t ch, uint8_t PinState);
+
+int8_t
+    digitalRead(uint8_t ch);
 
 /* USER CODE BEGIN Prototypes */
 

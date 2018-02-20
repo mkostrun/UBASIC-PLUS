@@ -54,7 +54,8 @@
 extern TIM_HandleTypeDef htim3;
 extern int16_t dutycycle_pwm_ch[UBASIC_SCRIPT_HAVE_PWM_CHANNELS];
 void pwm_Init(uint8_t ch);
-int16_t pwm_UpdateDutyCycle(uint8_t ch, int16_t dutycycle);
+void    analogWriteConfig(uint16_t psc, uint16_t per);
+int16_t analogWrite(uint8_t ch, int16_t dutycycle);
 #endif
                 
 

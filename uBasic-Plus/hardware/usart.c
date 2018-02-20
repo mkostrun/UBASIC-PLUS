@@ -159,8 +159,11 @@ void USART2_IRQHandler(void)
 
 void print_serial(char * msg)
 {
-  UART2_Transmit((uint8_t*) msg, strlen(msg));
-  while (UART_TX_Completed==RESET);
+  if (strlen(msg)>0)
+  {
+    UART2_Transmit((uint8_t*) msg, strlen(msg));
+    while (UART_TX_Completed==RESET);
+  }
 }
 
 uint8_t serial_input_available(void)
