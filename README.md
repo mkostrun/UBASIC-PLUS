@@ -173,7 +173,7 @@ Tied to hardware specific functions as described in *config.h* .
 
     0 for low, 1 for medium and 2 for high frequency.
 
-- *pwm_conf(prescaler,period), pwm(channel,value), pwm(channel)*
+- *awrite_conf(prescaler,period), awrite(channel,value)*
 
   direct control over output pins that support PWM on the micro-controller. Tied to hardware functions described in config.h
 
@@ -314,8 +314,8 @@ for i = 1 to 2
   k = sqrt(2*j) + ln(4*i) + cos(i+j) + sin(j)
   println 'k=' k
 next i
-  :repeat \
-if toc(1)<=300 then goto repeat
+:repeat
+  if toc(1)<=300 then goto repeat
 for i = 1 to 2
 println 'ran(' i ')=' ran
 next i
@@ -343,12 +343,12 @@ for j = 0 to 2
   sleep(0.5)
 next j
 println 'Press the Blue Button or type kill!'
-  :presswait \
-if hw_event(1)=0 then goto presswait
+:presswait
+  if hw_event(1)=0 then goto presswait
 tic(1)
 println 'Blue Button pressed!'
-  :deprwait \
-if hw_event(2)=0 then goto deprwait
+:deprwait
+  if hw_event(2)=0 then goto deprwait
 println 'duration =' toc(1)
 println 'Blue Button de-pressed!'
 println 'Demo 3 Completed'
@@ -357,17 +357,17 @@ end
 
 ### Demo 4 - input array entries in 10 sec time
 ```
-println 'Demo 4 - Input with timeouts';
-dim a@(5);
-for i = 1 to 5;
-  print '?';
-  input a@(i),10000;
-next i;
-println 'end of input';
-for i = 1 to 5;
-  println 'a(' i ') = ' a@(i);
-next i;
-println 'Demo 4 Completed';\
+println 'Demo 4 - Input with timeouts'
+dim a@(5)
+for i = 1 to 5
+  print '?'
+  input a@(i),10000
+next i
+println 'end of input'
+for i = 1 to 5
+  println 'a(' i ') = ' a@(i)
+next i
+println 'Demo 4 Completed'
 end
 ```
 
@@ -420,38 +420,38 @@ end
 ```
 println 'Demo 7: Analog Read or Kill'
 y=0
-  :startover 
+:startover
   x = aread(10)
   if (abs(x-y)>20) then
     y = x
     println 'x=',x
   endif
   sleep (0.2)
-goto startover
+  goto startover
 end
 ```
 
 
 ### Demo 8 - PWM Test
 ```
-println 'Demo 8: PWM 4-Channel Test'
+println 'Demo 8: analog write (PWM) 4-Channel Test'
 p = 65536
 for k = 1 to 10
   p = p/2
-  pwm_conf(p,4096)
-  println 'prescaler =', p
+  awrite_conf(p,4096)
+  println 'prescaler = ' p
   for i = 1 to 10
     for j = 1 to 4
-      pwm(j,4095*uniform)
+      awrite(j,4095*uniform)
     next j
-    println '    pwm=',pwm(1),pwm(2),pwm(3),pwm(4)
+    println '    analog write = ' awrite(1),awrite(2),awrite(3),awrite(4)
     sleep(5)
   next i
 next k
-pwm(1,0)
-pwm(2,0)
-pwm(3,0)
-pwm(4,0)
+awrite(1,0)
+awrite(2,0)
+awrite(3,0)
+awrite(4,0)
 end
 ```
 
