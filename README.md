@@ -512,5 +512,5 @@ About the board:
 
 
 
-Firmware footprint with all features enabled and 8 test scripts (bytes):
-34328 flash, 556 data and 2844 bss.
+Firmware footprint with all features enabled and 8 demo scripts (bytes):
+37464 flash, 704 data and 3944 bss.
