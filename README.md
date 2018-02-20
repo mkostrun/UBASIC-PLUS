@@ -169,6 +169,9 @@ Tied to hardware specific functions as described in *config.h* .
 
     Input:  0 for no pull, 1 for push-up, 2 for push-down.
 
+  - speed: STM specific
+
+    0 for low, 1 for medium and 2 for high frequency.
 
 - *pwm_conf(prescaler,period), pwm(channel,value), pwm(channel)*
 
@@ -188,11 +191,18 @@ gets set by external process. Importantly, after the interpreter recognizes that
 flag has been set, it immediately resets it so the subsequent calls will return 0
 until the flag is set again externally.
 
-- *i = aread(channel)*
+- *aread_conf(duration,nreads), i = aread(channel)*
 
   Read input from analog channels 0:18 from the microcontroller. The pin assignments of
 the analog inputs for some microcontrollers is given in hardware examples below.
 Some channels may not be available.
+
+  - duration: STM specific
+
+    0 through 7 for varius preprogrammend duration of analog sampling and conversion, higher
+the value longer the duration.
+
+  - nreads: value reported to the user will be an average of so many readings.
 
 
 ## *Command Line Interface* to uBasic-Plus
