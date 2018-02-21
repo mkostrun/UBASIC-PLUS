@@ -171,8 +171,9 @@ static uint8_t accept(VARIABLE_TYPE token)
 /*---------------------------------------------------------------------------*/
 static void accept_cr()
 {
-  while ( tokenizer_token() != TOKENIZER_EOL &&
-          tokenizer_token() != TOKENIZER_ENDOFINPUT )
+  while ( (tokenizer_token() != TOKENIZER_EOL) &&
+           (tokenizer_token() != TOKENIZER_ERROR) &&
+           (tokenizer_token() != TOKENIZER_ENDOFINPUT) )
   {
     tokenizer_next();
   }
@@ -229,38 +230,49 @@ static char* scpy(char *s1) // return a copy of s1
 {
   uint16_t bp = freebufptr;
   uint16_t l;
-   l = strlen(s1);
-   if (string_space_check(l)) 
-     return (char*)nullstring;
-   strcpy(stringbuffer+bp, s1);
-   freebufptr = bp + l + 1;
-   return stringbuffer+bp;
+
+  l = strlen(s1);
+
+  if (string_space_check(l))
+    return (char*)nullstring;
+
+  strcpy(stringbuffer+bp, s1);
+
+  freebufptr = bp + l + 1;
+
+  return stringbuffer+bp;
 }
    
 /*---------------------------------------------------------------------------*/
-static char* sconcat(char *s1, char*s2) { // return the concatenation of s1 and s2
+static char* sconcat(char *s1, char*s2)
+{
+  // return the concatenation of s1 and s2
   uint16_t bp = freebufptr;
   uint16_t rp = bp;
   uint16_t l1, l2;
-   l1 = strlen(s1);
-   l2 = strlen(s2);
-   if (string_space_check(l1+l2))
+  l1 = strlen(s1);
+  l2 = strlen(s2);
+  if (string_space_check(l1+l2))
      return (char*)nullstring;
-   strcpy((stringbuffer+bp), s1);
-   bp += l1;
-   if (l1 == MAX_STRINGVARLEN) {
-      freebufptr = bp + 1;
+
+  strcpy((stringbuffer+bp), s1);
+  bp += l1;
+  if (l1 == MAX_STRINGVARLEN)
+  {
+    freebufptr = bp + 1;
     return (stringbuffer + rp); 
-   }
-   l2 = strlen(s2);
-   strcpy((stringbuffer+bp), s2);
-   if (l1 + l2 > MAX_STRINGVARLEN) {
-      l2 = MAX_STRINGVARLEN - l1;
+  }
+
+  l2 = strlen(s2);
+  strcpy((stringbuffer+bp), s2);
+  if (l1 + l2 > MAX_STRINGVARLEN)
+  {
+    l2 = MAX_STRINGVARLEN - l1;
     // truncate
     *(stringbuffer + bp + l2) = '\0';
-   }   
-   freebufptr = bp + l2 + 1;
-   return (stringbuffer+rp);   
+  }   
+  freebufptr = bp + l2 + 1;
+  return (stringbuffer+rp);
 }
 /*---------------------------------------------------------------------------*/
 static char* sleft(char *s1, uint16_t l) // return the left l chars of s1
@@ -583,6 +595,20 @@ static VARIABLE_TYPE factor(void)
       // end of string additions
 #endif
 
+    case TOKENIZER_MINUS:
+      accept(TOKENIZER_MINUS);
+      r = - factor();
+      break;
+
+    case TOKENIZER_LNOT:
+      accept(TOKENIZER_LNOT);
+      r = ! relation();
+      break;
+
+    case TOKENIZER_NOT:
+      accept(TOKENIZER_LNOT);
+      r = ~ relation();
+      break;
 
 #if defined(UBASIC_SCRIPT_HAVE_TICTOC)
     case TOKENIZER_TOC:
@@ -1253,7 +1279,7 @@ static void pinmode_statement(void)
 
 static void dwrite_statemet(void)
 {
-  VARIABLE_TYPE i,j,r;
+  VARIABLE_TYPE j,r;
   accept(TOKENIZER_DWRITE);
   accept(TOKENIZER_LEFTPAREN);
 
@@ -1622,6 +1648,7 @@ static void let_statement(void)
       ubasic_set_arrayvariable(varnum, (uint16_t) idx, relation());
   }
 #endif
+
   accept_cr();
 }
 

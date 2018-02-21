@@ -68,7 +68,7 @@
 /* defines the representation of floating point numbers as fixed points:
     this is to allow UBASIC to run on Cortex M0 processors which do not
     support Floating Point Arithmetic in hardware (they emulate it which
-    consumes lots of flash memory) */
+    consumes lots of memory) */
 #define VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8
 
 /* This many one-letter variables UBASIC supports */
@@ -229,7 +229,7 @@ extern volatile uint32_t ubasic_script_tic5_ms;
 
 
 #if defined(UBASIC_SCRIPT_HAVE_HARDWARE_EVENTS)
-extern volatile uint8_t pb_status, hw_event;
+extern volatile uint8_t hw_event;
 #endif
 
 

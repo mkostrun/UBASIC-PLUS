@@ -101,7 +101,7 @@ static const struct keyword_token keywords[] =
   {"tic", TOKENIZER_TIC},
 #endif
 #if defined(UBASIC_SCRIPT_HAVE_HARDWARE_EVENTS)
-  {"hw_event", TOKENIZER_HWE},
+  {"flag", TOKENIZER_HWE},
 #endif
 #if defined(UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR)
   {"ran", TOKENIZER_RAN},
@@ -294,7 +294,7 @@ static uint8_t get_next_token(void)
       nextptr++;
     return TOKENIZER_INT;
   }
-  else if( isdigit(*ptr) || (*ptr=='.') || (*ptr=='-') )
+  else if( isdigit(*ptr) || (*ptr=='.') )
   {
     // is it
     //    FLOAT (digits with at most one decimal point)
@@ -303,15 +303,8 @@ static uint8_t get_next_token(void)
     nextptr = ptr;
     have_decdot = 0;
     i_dot = 0;
-    if (*nextptr == '-')
-    {
-      nextptr++;
-    }
     while (1)
     {
-      if (*nextptr == '-')
-        return TOKENIZER_ERROR;
-
       if (*nextptr>='0' && *nextptr<='9')
       {
         nextptr++;
@@ -346,7 +339,7 @@ static uint8_t get_next_token(void)
     return j;
   }
 #if defined(VARIABLE_TYPE_STRING)
-  else if(*ptr == '"' || *ptr == '\'')
+  else if (( *ptr == '"' || *ptr == '\'') && (*(ptr-1) != '\\') )
   {
     i = *ptr;
     nextptr = ptr;
@@ -356,8 +349,9 @@ static uint8_t get_next_token(void)
       if ((*nextptr=='\0')||(*nextptr=='\n')||(*nextptr==';'))
         return TOKENIZER_ERROR;
     }
-    while(*nextptr != i && *(nextptr-1) != '\\');
-      ++nextptr;
+    while(*nextptr != i || *(nextptr-1) == '\\');
+
+    ++nextptr;
 
     return TOKENIZER_STRING;
   }
@@ -509,14 +503,8 @@ void tokenizer_next(void)
 
 VARIABLE_TYPE tokenizer_num(void)
 {
-  uint8_t *c = (uint8_t *) ptr, i_minus=0;
+  uint8_t *c = (uint8_t *) ptr;
   VARIABLE_TYPE rval=0;
-
-  if (*c=='-')
-  {
-    c++;
-    i_minus = 1;
-  }
 
   while (1)
   {
@@ -528,10 +516,7 @@ VARIABLE_TYPE tokenizer_num(void)
     c++;
   }
 
-  if (i_minus)
-    return -rval;
-  else
-    return rval;
+  return rval;
 }
 
 
@@ -610,11 +595,22 @@ void tokenizer_string(char *dest, uint8_t len)
   }
   quote_char = *ptr;
 
-  string_end = strchr(ptr + 1, quote_char);
-  if(string_end == NULL)
+  /** figure out the quote used for strings
+    * ignore escaped string-quotes
+    */
+  string_end = (char *) ptr;
+  do
   {
-    return;
+    string_end++;
+
+    string_end = strchr(string_end, quote_char);
+    if(string_end == NULL)
+    {
+      return;
+    }
   }
+  while ( *(string_end - 1) == '\\');
+
   string_len = string_end - ptr - 1;
   if(len < string_len)
   {
@@ -622,6 +618,7 @@ void tokenizer_string(char *dest, uint8_t len)
   }
   memcpy(dest, ptr + 1, string_len);
   dest[string_len] = 0;
+  return;
 }
 #endif
 
@@ -659,7 +656,7 @@ void tokenizer_error_print(VARIABLE_TYPE token)
 //     print_serial(msg);
 //   }
   print_serial("Err");
-  sprintf(msg,"[%02x]:", (uint8_t) token);
+  sprintf(msg,"[%u]:", (uint8_t) token);
   print_serial(msg);
   print_serial((char*)ptr-1);
   print_serial("\n");

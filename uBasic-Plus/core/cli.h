@@ -8,6 +8,10 @@
 #define UBASIC_CLI_RUNNING    2
 #define UBASIC_CLI_PROG       3
 
-uint8_t is_cmd(char *statement, const char * cmd);
+#define UBASIC_SCRIPT_SIZE_MAX  (1024)
+#define UBASIC_STATEMENT_SIZE_MAX  (64)
+
+extern const char welcome_msg[];
+void ubasic_cli(void);
 
 #endif

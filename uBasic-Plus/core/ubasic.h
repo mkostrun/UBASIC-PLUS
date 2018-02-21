@@ -36,8 +36,8 @@
 
 /*
  * Modified to support fixed point arithmetic, and number of math and io and
- * hardware functions by Marijan Kostrun, January 2018.
- * Added config.h file that allows detailed configuration of the UBASIC.
+ * hardware functions by Marijan Kostrun, January-February 2018.
+ * uBasic-Plus Copyright (c) 2017-2018, M. Kostrun
  */
 
 
