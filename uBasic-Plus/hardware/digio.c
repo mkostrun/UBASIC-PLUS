@@ -48,9 +48,9 @@ void pinMode(uint8_t ch, int8_t mode, uint8_t freq)
   {
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   }
-  else if (mode == -1)
+  else if (mode < 0)
   {
-      GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   }
   else
   {
@@ -124,10 +124,6 @@ int8_t digitalRead(uint8_t ch)
 }
 
 
-/**
-  * ch = 0xa0:0xff, same exclusions apply
-  *
-  */
 int8_t digitalWrite(uint8_t ch, uint8_t PinState)
 {
   uint32_t pin  = 1 << (ch & 0x0f) ;

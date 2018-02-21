@@ -156,12 +156,21 @@ void USART2_IRQHandler(void)
   /* USER CODE END USART2_IRQn 1 */
 }
 
-
 void print_serial(char * msg)
 {
   if (strlen(msg)>0)
   {
     UART2_Transmit((uint8_t*) msg, strlen(msg));
+    while (UART_TX_Completed==RESET);
+  }
+}
+
+void print_serial_n(char * msg, uint16_t n)
+{
+  n = n > strlen(msg) ? strlen(msg) : n;
+  if (n>0)
+  {
+    UART2_Transmit((uint8_t*) msg, n);
     while (UART_TX_Completed==RESET);
   }
 }
@@ -204,6 +213,40 @@ uint8_t serial_input (char * buffer, uint8_t len)
   return i;
 }
 
+void print_numbered_lines(char * script)
+{
+  uint16_t counter=0;
+  char msg[32];
+
+  char *c = script, *d=0, *e=0;
+
+  do
+  {
+    counter++;
+    sprintf(msg,"%02u ", counter);
+    print_serial(msg);
+
+    char *s = c;
+    while (*s==' ') ++s;
+
+    /* important: because two EOLs are used make sure that the first of the two is selected ! */
+    d = strchr(s,';');
+    e = strchr(s,'\n');
+    if (e)
+      d = d-e > 0 ? e : d;
+
+    if (d)
+    {
+      print_serial_n(s, d-s);
+      c = d+1;
+    }
+    else
+      print_serial(s);
+
+    print_serial("\n");
+  }
+  while(d);
+}
 
 
 /**
