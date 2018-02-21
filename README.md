@@ -180,13 +180,13 @@ The *value* has to be in the range 0 to *period*-1.
 Tied to hardware functions described in config.h
 
 
-- *i = hw_event(channel)*
+- *i = flag(channel)*
 
   Allow flags that can be set outside BASIC interpreter, e.g., using interrupts,
 to be used in flow control.
   ```
   :waithere
-      if (hw_event(1)==0) then goto waithere;
+      if (flag(1)==0) then goto waithere;
   ```
   In this example the script sits in this loop until the hardware event flag no. 1
 gets set by external process. Importantly, after the interpreter recognizes that the
@@ -346,11 +346,11 @@ for j = 0 to 2
 next j
 println 'Press the Blue Button or type kill!'
 :presswait
-  if hw_event(1)=0 then goto presswait
+  if flag(1)=0 then goto presswait
 tic(1)
 println 'Blue Button pressed!'
 :deprwait
-  if hw_event(2)=0 then goto deprwait
+  if flag(2)=0 then goto deprwait
 println 'duration =' toc(1)
 println 'Blue Button de-pressed!'
 println 'Demo 3 Completed'
@@ -478,8 +478,8 @@ About the board:
 8:9 as B0:B1, and 10:15 as C0:C5. Channel 16 is the temperature, and 17 the VREF.
 - Hardware Events:
   - Blue Push Button 1 (PC13) with two events:
-    - button pressed - hw_event(1), and
-    - button depressed - hw_event(2)
+    - button pressed - flag(1), and
+    - button depressed - flag(2)
 - sleep, tic/toc:
 
   through *SysTick_Handler()* which counts in 1ms increments through interrupts
@@ -500,8 +500,8 @@ About the board:
 - Analog output: Channel 1.
 - Hardware Events:
   - Blue Push Button 1 (PA0) with two events:
-    - button pressed - hw_event(1), and
-    - button depressed - hw_event(2)
+    - button pressed - flag(1), and
+    - button depressed - flag(2)
 - sleep, tic/toc:
 
   through *SysTick_Handler()* which counts in 1ms increments through interrupts
@@ -513,4 +513,4 @@ About the board:
 
 
 Firmware footprint with all features enabled and 8 demo scripts (bytes):
-37464 flash, 704 data and 3944 bss.
+37872 flash, 548 data and 3940 bss.
