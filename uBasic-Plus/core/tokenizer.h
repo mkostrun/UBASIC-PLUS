@@ -161,6 +161,11 @@ enum {
 #endif
 /*85*/  TOKENIZER_LABEL,
 /*86*/  TOKENIZER_COLON,
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+/*87*/  TOKENIZER_STORE,
+/*88*/  TOKENIZER_RECALL,
+#endif
+/*89*/  TOKENIZER_CLEAR,
   //
   // Plus: End
   // 

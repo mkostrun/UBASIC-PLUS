@@ -1,8 +1,5 @@
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
-
 /*-
- * Copyright (c) 2018, Marijan Kostrun <mkostrun@gmail.com>
+ * Copyright (c) 2017-18, Marijan Kostrun <mkostrun@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,6 +24,9 @@
  * 
  */
 
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -45,6 +45,7 @@
 #undef  VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10
 #undef  VARIABLE_TYPE_STRING
 #undef  VARIABLE_TYPE_ARRAY
+#undef  UBASIC_SCRIPT_HAVE_DEMO_SCRIPTS
 
 /* Microcontroller related functionality */
 #undef  UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR
@@ -56,12 +57,13 @@
 #undef  UBASIC_SCRIPT_PRINT_TO_SERIAL
 #undef  UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL
 #undef  UBASIC_SCRIPT_HAVE_ANALOG_READ
+#undef  UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH
+
 /**
   *
   *   UBASIC-PLUS: Start
   *
   */
-
 /* default storage for all numeric values */
 #define VARIABLE_STORAGE_INT32
 
@@ -93,7 +95,7 @@
 #define  UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR
 
 /* support for direct access to pin inputs and ooutputs */
-#define  UBASIC_SCRIPT_HAVE_GPIO_CHANNELS (4)
+#define  UBASIC_SCRIPT_HAVE_GPIO_CHANNELS
 
 /* support flags in BASIC that change on hardware events:
     for STM32F0XX nucleo and discovery boards
@@ -110,6 +112,11 @@
 /* support for analog inputs */
 #define  UBASIC_SCRIPT_HAVE_ANALOG_READ
 
+/* Demo scripts are huge. Do we need them? */
+#define  UBASIC_SCRIPT_HAVE_DEMO_SCRIPTS
+
+/* support for storing/recalling variables in/from flash memory */
+#define UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH
 /**
   *
   *   UBASIC-PLUS: End
@@ -167,7 +174,7 @@ typedef union
   uint8_t byte;
   struct
   {
-    uint8_t bit0 : 1;
+    uint8_t notInitialized : 1;
     uint8_t bit1 : 1;
     uint8_t bit2 : 1;
     uint8_t bit3 : 1;
@@ -257,10 +264,18 @@ extern uint8_t ubasic_script_wait_for_input_expired;
 #if defined(UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR) || defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
 uint32_t  RandomUInt32(uint8_t size);
 #if defined(UBASIC_SCRIPT_HAVE_ANALOG_READ)
-uint8_t analogReadConfig(uint8_t sampletime, uint8_t nreads);
+void    analogReadConfig(uint8_t sampletime, uint8_t nreads);
 int16_t analogRead(uint8_t channel);
 #endif /* UBASIC_SCRIPT_HAVE_ANALOG_READ */
 #endif /* UBASIC_SCRIPT_HAVE_RANDOM_NUMBER_GENERATOR || UBASIC_SCRIPT_HAVE_ANALOG_READ */
+
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+void    EE_Init(void);
+void    EE_WriteVariable(uint8_t Name, uint8_t Vartype, uint8_t datalen_bytes, uint8_t *dataptr);
+void    EE_ReadVariable(uint8_t Name, uint8_t Vartype, uint8_t *dataptr, uint8_t *datalen);
+void    EE_DumpFlash(void);
+#endif
+
 
 
 #endif /* #ifndef _CONFIG_H_ */

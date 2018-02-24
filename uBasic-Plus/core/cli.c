@@ -9,6 +9,7 @@ Welcome to uBasic-Plus for STM32 by M.Kostrun\n\
 Expands upon uBasic by A.Dunkels, uBasic with string by D.Mitchell,\n\
 and uBasic for CHDK by P.d'Angelo\n>";
 
+#if defined(UBASIC_SCRIPT_HAVE_DEMO_SCRIPTS)
 static const char *program[] = {
 
 "\
@@ -119,7 +120,7 @@ end",
 "\
 println 'Demo 5 - analog inputs and arrays';\
 aread_conf(7,16);\
-for i = 1 to 100;\
+for i = 1 to 5;\
   x = aread(16);\
   y = aread(17);\
   println 'VREF,TEMP=', x, y;\
@@ -192,8 +193,39 @@ awrite(2,0);\
 awrite(3,0);\
 awrite(4,0);\
 println 'Demo 8 Completed';\
+end",
+
+"\
+clear;\
+println 'Demo 9: store/recall with FLASH';\
+if (recall(x)==0) then;\
+  println 'generating x';\
+  x = uniform;\
+  store(x);\
+endif;\
+println 'stored: x=' x;\
+if (recall(y@)==0) then;\
+  println 'generating y';\
+  dim y@(10);\
+  for i=1 to 10;\
+    y@(i) = uniform;\
+  next i;\
+  store(y@);\
+endif;\
+println 'stored: y@';\
+for i=1 to 10;\
+  println '  y@('i')=' y@(i);\
+next i;\
+if (recall(s$)==0) then;\
+  println 'generating s';\
+  s$='what is going on?';\
+  store(s$);\
+endif;\
+println 'stored: s$',s$;\
+println 'Demo 9 Completed';\
 end"
 };
+#endif
 
 /* Private variables ---------------------------------------------------------*/
 static char script[UBASIC_SCRIPT_SIZE_MAX];
@@ -202,6 +234,11 @@ static uint8_t cli_state=UBASIC_CLI_IDLE;
 
 void ubasic_cli(void)
 {
+
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+  EE_Init();
+#endif
+
   if ( (cli_state == UBASIC_CLI_LOADED) || (cli_state == UBASIC_CLI_RUNNING) )
   {
     ubasic_run_program();
@@ -287,6 +324,7 @@ void ubasic_cli(void)
         }
         return;
       }
+#if defined(UBASIC_SCRIPT_HAVE_DEMO_SCRIPTS)
       else if (strstr(statement,"demo"))
       {
           // run script
@@ -295,7 +333,7 @@ void ubasic_cli(void)
         char *s = &statement[4];
         while (*s==' ') ++s;
         uint8_t idx = *s - '0';
-        if (idx<8)
+        if (idx<10)
         {
           ubasic_load_program( program[idx-1] );
           cli_state = UBASIC_CLI_LOADED;
@@ -306,7 +344,17 @@ void ubasic_cli(void)
         }
         return;
       }
-
+#endif
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+      else if (strstr(statement,"flash"))
+      {
+        // test write
+        print_serial("flash\n");
+        EE_DumpFlash();
+        print_serial(">");
+        return;
+      }
+#endif
       if (cli_state == UBASIC_CLI_PROG)
       {
           // add statement to the script
@@ -316,7 +364,7 @@ void ubasic_cli(void)
           while (script[strlen(script)-1]==' ' || script[strlen(script)-1]=='\t')
             script[strlen(script)-1]='\0';
           if (script[strlen(script)-1] != '\n' && script[strlen(script)-1] != ';')
-            sprintf(&script[strlen(script)], ";");
+            sprintf(&script[strlen(script)], "\n");
         }
         char *s = statement;
         while (*s==' ') s++;

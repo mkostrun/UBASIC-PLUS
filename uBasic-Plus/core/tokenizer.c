@@ -138,6 +138,11 @@ static const struct keyword_token keywords[] =
   {"hex ", TOKENIZER_PRINT_HEX},
   {"dec ", TOKENIZER_PRINT_DEC},
   { ":", TOKENIZER_COLON},
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+  { "store", TOKENIZER_STORE},
+  { "recall", TOKENIZER_RECALL},
+#endif
+  { "clear", TOKENIZER_CLEAR},
   {NULL, TOKENIZER_ERROR}
 };
 

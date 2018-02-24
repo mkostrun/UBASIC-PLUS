@@ -37,7 +37,7 @@
   * uBASIC Global and Exported Variables: Start
   * 
   */
-volatile _Status ubasic_status;
+volatile _Status ubasic_status = {.bit.notInitialized=1};
 uint8_t   input_how=0;
 
 /**
@@ -113,6 +113,10 @@ VARIABLE_TYPE  input_array_index;
 #endif
 #endif
 
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+static VARIABLE_TYPE recall_statement(void);
+#endif
+
 /*---------------------------------------------------------------------------*/
 void ubasic_clear_variables()
 {
@@ -129,7 +133,7 @@ void ubasic_clear_variables()
   free_arrayptr = 0;
   for (i=0; i<VARIABLE_TYPE_ARRAY; i++)
   {
-    arrays_data[VARIABLE_TYPE_ARRAY] = 0;
+    arrays_data[i] = 0;
   }
 #endif
 
@@ -144,8 +148,12 @@ void ubasic_clear_variables()
 /*---------------------------------------------------------------------------*/
 void ubasic_load_program(const char *program)
 {
-  ubasic_status.byte= 0;
   for_stack_ptr = gosub_stack_ptr = 0;
+  if (ubasic_status.bit.notInitialized)
+  {
+    ubasic_clear_variables();
+  }
+  ubasic_status.byte= 0x00;
   if (program)
   {
     program_ptr = program;
@@ -907,6 +915,11 @@ static VARIABLE_TYPE factor(void)
       break;
 #endif /* UBASIC_SCRIPT_HAVE_GPIO_CHANNELS */
 
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+    case TOKENIZER_RECALL:
+      r = recall_statement();
+      break;
+#endif
 
     default:
       r = varfactor();
@@ -1225,7 +1238,7 @@ static void areadconf_statement(void)
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   r = fixedpt_toint(r);
 #endif
-  r = analogReadConfig(j,r);
+  analogReadConfig(j,r);
   accept(TOKENIZER_RIGHTPAREN);
   accept_cr();
 }
@@ -1655,24 +1668,26 @@ static void let_statement(void)
 #if defined(VARIABLE_TYPE_ARRAY)
 static void dim_statement(void)
 {
-  uint32_t size=0;
+  VARIABLE_TYPE size=0;
 
   accept (TOKENIZER_DIM);
 
   // array addition here
   uint8_t  varnum = tokenizer_variable_num();
 
+// 
   accept (TOKENIZER_ARRAYVARIABLE);
 
-  accept(TOKENIZER_LEFTPAREN);
+//   accept(TOKENIZER_LEFTPAREN);
   size = relation();
+
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   size = fixedpt_toint( size );
 #endif
 
   ubasic_dim_arrayvariable(varnum, size);
 
-  accept(TOKENIZER_RIGHTPAREN);
+//   accept(TOKENIZER_RIGHTPAREN);
   accept_cr();
 
 // end of array additions
@@ -2033,6 +2048,97 @@ static void endwhile_statement(void)
 }
 /*---------------------------------------------------------------------------*/
 
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+
+static VARIABLE_TYPE recall_statement(void)
+{
+  VARIABLE_TYPE rval=0;
+
+  static uint8_t varnum;
+
+  accept(TOKENIZER_RECALL);
+  accept(TOKENIZER_LEFTPAREN);
+
+  if (tokenizer_token() == TOKENIZER_VARIABLE)
+  {
+    varnum = tokenizer_variable_num();
+    accept(TOKENIZER_VARIABLE);
+    EE_ReadVariable( varnum, 0, (uint8_t *) &variables[varnum], (uint8_t *) &rval );
+    rval >>= 2;
+  }
+#if defined(VARIABLE_TYPE_STRING)
+  else if (tokenizer_token() == TOKENIZER_STRINGVARIABLE)
+  {
+    varnum = tokenizer_variable_num();
+    accept(TOKENIZER_STRINGVARIABLE);
+    char dummy_s[MAX_STRINGLEN] = {0};
+    EE_ReadVariable( varnum, 1, (uint8_t *) dummy_s, (uint8_t *) &rval );
+    if (rval > 0)
+      stringvariables[varnum] = scpy((char *)dummy_s);
+    else
+      stringvariables[varnum] = scpy((char *)nullstring);
+  }
+#endif
+#if defined(VARIABLE_TYPE_ARRAY)
+  else if (tokenizer_token() == TOKENIZER_ARRAYVARIABLE)
+  {
+    varnum = tokenizer_variable_num();
+    accept(TOKENIZER_ARRAYVARIABLE);
+    VARIABLE_TYPE dummy_a[VARIABLE_TYPE_ARRAY+1];
+    EE_ReadVariable(varnum, 2, (uint8_t *) dummy_a, (uint8_t *) &rval );
+    if (rval > 0)
+    {
+      rval >>= 2;
+      ubasic_dim_arrayvariable(varnum, rval);
+      for (uint8_t i=0; i<rval; i++)
+        ubasic_set_arrayvariable(varnum, i+1,  dummy_a[i]);
+    }
+  }
+#endif
+
+  accept(TOKENIZER_RIGHTPAREN);
+  return rval;
+}
+
+static void store_statement(void)
+{
+  static uint8_t varnum;
+
+  accept(TOKENIZER_STORE);
+  accept(TOKENIZER_LEFTPAREN);
+
+  if (tokenizer_token() == TOKENIZER_VARIABLE)
+  {
+    varnum = tokenizer_variable_num();
+    accept(TOKENIZER_VARIABLE);
+    EE_WriteVariable( varnum, 0, 4, (uint8_t *) &variables[varnum] );
+  }
+  #if defined(VARIABLE_TYPE_STRING)
+  // string additions here
+  else if (tokenizer_token() == TOKENIZER_STRINGVARIABLE)
+  {
+    varnum = tokenizer_variable_num();
+    accept(TOKENIZER_STRINGVARIABLE);
+    EE_WriteVariable( varnum, 1, strlen(stringvariables[varnum]),
+                      (uint8_t *) stringvariables[varnum] );
+  }
+  // end of string additions
+  #endif
+  #if defined(VARIABLE_TYPE_ARRAY)
+  else if (tokenizer_token() == TOKENIZER_ARRAYVARIABLE)
+  {
+    varnum = tokenizer_variable_num();
+    accept(TOKENIZER_ARRAYVARIABLE);
+    EE_WriteVariable(varnum, 2, 4 * (arrays_data[arrayvariable[varnum]] & 0x0000ffff),
+                     (uint8_t *) &arrays_data[arrayvariable[varnum] + 1] );
+  }
+  #endif
+
+  accept(TOKENIZER_RIGHTPAREN);
+  accept_cr();
+}
+/*---------------------------------------------------------------------------*/
+#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -2163,8 +2269,23 @@ static void statement(void)
     case TOKENIZER_DWRITE:
       dwrite_statemet();
       break;
-
 #endif /* UBASIC_SCRIPT_HAVE_GPIO_CHANNELS */
+
+#if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
+    case TOKENIZER_STORE:
+      store_statement();
+      break;
+
+    case TOKENIZER_RECALL:
+      recall_statement();
+      break;
+#endif /* UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH */
+
+    case TOKENIZER_CLEAR:
+      ubasic_clear_variables();
+      accept_cr();
+      break;
+
 
     default:
       tokenizer_error_print(token);
@@ -2217,16 +2338,16 @@ void ubasic_run_program(void)
   }
 #endif
 
-  if(tokenizer_finished())
-  {
-    return;
-  }
-
 #if defined(VARIABLE_TYPE_STRING)
   // string additions
   garbage_collect();
   // end of string additions
 #endif
+
+  if(tokenizer_finished())
+  {
+    return;
+  }
 
   numbered_line_statement();
 }
@@ -2342,12 +2463,12 @@ char* ubasic_get_stringvariable(uint8_t varnum)
 //    entries 2 through size+1 are the array elements
 //  could work for 16bit values as well
 /*---------------------------------------------------------------------------*/
-void ubasic_dim_arrayvariable(uint8_t varnum, uint16_t newsize)
+void ubasic_dim_arrayvariable(uint8_t varnum, int16_t newsize)
 {
   if(varnum >= MAX_VARNUM)
     return;
 
-  uint16_t oldsize;
+  int16_t oldsize;
   int16_t  current_location;
 
   current_location = arrayvariable[varnum];
@@ -2366,20 +2487,23 @@ void ubasic_dim_arrayvariable(uint8_t varnum, uint16_t newsize)
   }
   else
   {
-    oldsize = arrays_data[current_location] & 0x0000ffff;
+    oldsize = arrays_data[current_location];
   }
 
   /* if size of the array is the same as earlier allocated then do nothing */
   if (oldsize == newsize)
+  {
     return;
+  }
 
   /* if this is the last array in arrays_data, just modify the boundary */
-  if (oldsize + 1 == free_arrayptr)
+  if (current_location + oldsize + 1 == free_arrayptr)
   {
     if (free_arrayptr - current_location + newsize < VARIABLE_TYPE_ARRAY)
     {
       arrays_data[current_location] = (varnum<<16) | newsize;
-      free_arrayptr = newsize + 1;
+      free_arrayptr += newsize - oldsize;
+      arrays_data[free_arrayptr] = 0;
       return;
     }
 
@@ -2398,17 +2522,22 @@ void ubasic_dim_arrayvariable(uint8_t varnum, uint16_t newsize)
   {
     mov_varnum = (arrays_data[next_location]>>16);
     mov_size   =  arrays_data[next_location];
-    for (uint8_t i=0; i<mov_size; i++)
+
+    for (uint8_t i=0; i<=mov_size; i++)
     {
       arrays_data[current_location + i] = arrays_data[next_location + i];
       arrays_data[next_location + i] = 0;
     }
     arrayvariable[mov_varnum] = current_location;
-    next_location = next_location + mov_size;
-    current_location = current_location + mov_size;
+    next_location = next_location + mov_size + 1;
+    current_location = current_location + mov_size + 1;
+    arrays_data[current_location] = 0;
+
+    for (uint8_t i=mov_size; i<next_location; i++)
+      arrays_data[current_location + i];
   }
   while (arrays_data[next_location]>0);
-  free_arrayptr = next_location;
+  free_arrayptr = current_location;
 
   /** now the array should be added to the end of the list:
       if there is space do it! */
@@ -2427,7 +2556,7 @@ void ubasic_set_arrayvariable(uint8_t varnum, uint16_t idx,  VARIABLE_TYPE value
 VARIABLE_TYPE ubasic_get_arrayvariable(uint8_t varnum, uint16_t idx)
 {
   uint16_t size = (uint16_t) arrays_data[arrayvariable[varnum]];
-  if ((idx>0)&&(idx<=size))
+  if ((idx>=0)&&(idx<=size))
     return (VARIABLE_TYPE) arrays_data[arrayvariable[varnum] + idx];
   return -1;
 }

@@ -57,7 +57,7 @@ VARIABLE_TYPE ubasic_get_variable(uint8_t varnum);
 void ubasic_set_variable(uint8_t varum, VARIABLE_TYPE value);
 
 #if defined(VARIABLE_TYPE_ARRAY)
-void ubasic_dim_arrayvariable(uint8_t varnum, uint16_t size);
+void ubasic_dim_arrayvariable(uint8_t varnum, int16_t size);
 void ubasic_set_arrayvariable(uint8_t varnum, uint16_t idx,  VARIABLE_TYPE value);
 VARIABLE_TYPE ubasic_get_arrayvariable(uint8_t varnum, uint16_t idx);
 #endif
