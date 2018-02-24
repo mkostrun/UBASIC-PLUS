@@ -290,33 +290,33 @@ return
 
 ### Demo 2 - 'uBasic with strings' by David Mitchell
 ```
-println 'Demo 2';
-a$= 'abcdefghi';
-b$='123456789';
-println 'Length of a$=', len(a$);
-println 'Length of b$=', len(b$);
-if len(a$) = len(b$) then println 'same length';
-if a$ = b$ then println 'same string';
-c$=left$(a$+ b$,12);
-println c$;
-c$=right$(a$+b$, 12);
-println c$;
-c$=mid$(a$+b$, 8,8);
-println c$;
-c$=str$(13+42);
-println c$;
-println len(c$);
-println len('this' + 'that');
-c$ = chr$(34);
-println 'c$=' c$;
-j = asc(c$);
-println 'j=' j;
-println val('12345');
-i=instr(3, '123456789', '67');
-println 'position of 67 in 123456789 is', i;
-println mid$(a$,2,2)+'xyx';
-println 'Demo 2 Completed';
-end;
+println 'Demo 2'
+a$= 'abcdefghi'
+b$='123456789'
+println 'Length of a$=', len(a$)
+println 'Length of b$=', len(b$)
+if len(a$) = len(b$) then println 'same length'
+if a$ = b$ then println 'same string'
+c$=left$(a$+ b$,12)
+println c$
+c$=right$(a$+b$, 12)
+println c$
+c$=mid$(a$+b$, 8,8)
+println c$
+c$=str$(13+42)
+println c$
+println len(c$)
+println len('this' + 'that')
+c$ = chr$(34)
+println 'c$=' c$
+j = asc(c$)
+println 'j=' j
+println val('12345')
+i=instr(3, '123456789', '67')
+println 'position of 67 in 123456789 is', i
+println mid$(a$,2,2)+'xyx'
+println 'Demo 2 Completed'
+end
 ```
 
 ### Demo 3 - uBasic-Plus is here
@@ -500,8 +500,8 @@ endif
 println 'stored: s$',s$
 println 'Demo 9 Completed'
 println 'Please run it once more'
-end"
-
+end
+```
 
 ## UBASIC PLUS HARDWARE SUPPORT
 
