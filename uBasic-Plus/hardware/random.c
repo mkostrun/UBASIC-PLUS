@@ -108,7 +108,7 @@ void MX_ADC_Init(void)
   return;
 }
 
-uint8_t analogReadConfig(uint8_t stime, uint8_t nr)
+void analogReadConfig(uint8_t sampletime, uint8_t nr)
 {
   if (nr)
     nreads = nr;
