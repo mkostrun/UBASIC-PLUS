@@ -209,6 +209,19 @@ the value longer the duration.
   - nreads: value reported to the user will be an average of so many readings.
 
 
+- *clear*
+
+  Clears all variables, arrays and strings. It is good practice to put it as the
+first line of the script.
+
+
+- *store(x[x$,x@]), i=recall(x[x$,x@])*
+
+  Store and recall variable, string or array in FLASH. In that way variable can survive
+reboot of the device. The single page from FLASH is used as a scratch space, so when
+there is no more space left on the page, the entire page is erased.
+
+
 ## *Command Line Interface* to uBasic-Plus
 
 The Command Line Interface (CLI) supports the following commands:
@@ -456,6 +469,38 @@ awrite(3,0)
 awrite(4,0)
 end
 ```
+
+### Demo 9 - Store/recall in FLASH Test
+```
+clear
+println 'Demo 9: store/recall with FLASH'
+if (recall(x)==0) then
+  println 'generating x'
+  x = uniform
+  store(x)
+endif
+println 'stored: x=' x
+if (recall(y@)==0) then
+  println 'generating y'
+  dim y@(10)
+  for i=1 to 10
+    y@(i) = uniform
+  next i
+  store(y@)
+endif
+println 'stored: y@'
+for i=1 to 10
+  println '  y@('i')=' y@(i)
+next i
+if (recall(s$)==0) then
+  println 'generating s'
+  s$='what is going on?'
+  store(s$)
+endif
+println 'stored: s$',s$
+println 'Demo 9 Completed'
+println 'Please run it once more'
+end"
 
 
 ## UBASIC PLUS HARDWARE SUPPORT
