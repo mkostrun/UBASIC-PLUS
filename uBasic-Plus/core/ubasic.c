@@ -77,14 +77,12 @@ struct while_state {
   uint16_t line_while;
   int16_t line_after_endwhile;
 };
-//static int16_t while_stack[MAX_WHILE_STACK_DEPTH];
-static struct while_state while_stack[MAX_FOR_STACK_DEPTH];
+static struct while_state while_stack[MAX_WHILE_STACK_DEPTH];
 static uint8_t while_stack_ptr;
 
 VARIABLE_TYPE variables[MAX_VARNUM];
 
 static VARIABLE_TYPE relation(void);
-uint16_t current_linenum=0;
 static void numbered_line_statement(void);
 static void statement(void);
 static char string[MAX_STRINGLEN];
@@ -207,30 +205,39 @@ uint8_t string_space_check(uint16_t l)
 }
 
 /*---------------------------------------------------------------------------*/
-void garbage_collect() 
+void garbage_collect(void)
 {
   uint16_t totused = 0;
   uint16_t i;
   char *temp;
   char *tp;
+
   if (freebufptr < GBGCHECK)
      return;
-  for (i=0; i< MAX_SVARNUM; i++) { // calculate used space
-     totused += strlen(stringvariables[i]) + 1;
+
+  for (i=0; i< MAX_SVARNUM; i++)
+  {
+    // calculate used space
+    totused += strlen(stringvariables[i]) + 1;
   }
   temp = malloc(totused); // alloc temporary space to store vars
   tp = temp;
-  for (i=0; i< MAX_SVARNUM; i++) { // copy used strings to temporary store
-     strcpy(tp, stringvariables[i]);
-   tp += strlen(tp) + 1;
+  for (i=0; i< MAX_SVARNUM; i++)
+  {
+    // copy used strings to temporary store
+    strcpy(tp, stringvariables[i]);
+    tp += strlen(tp) + 1;
   }
+
   freebufptr = 0;
   tp = temp;
-  for (i=0; i< MAX_SVARNUM; i++) { //copy back to buffer
-     stringvariables[i] = scpy(tp);
-   tp+= strlen(tp) + 1;
+  for (i=0; i< MAX_SVARNUM; i++)
+  {
+    //copy back to buffer
+    stringvariables[i] = scpy(tp);
+    tp+= strlen(tp) + 1;
   }
-  
+
   free(temp); // free temp space
  }
 /*---------------------------------------------------------------------------*/
@@ -248,7 +255,7 @@ static char* scpy(char *s1) // return a copy of s1
 
   freebufptr = bp + l + 1;
 
-  return stringbuffer+bp;
+  return (stringbuffer+bp);
 }
    
 /*---------------------------------------------------------------------------*/
@@ -369,11 +376,10 @@ static char* schr(uint16_t j) // return the character whose ASCII code is j
 {
   uint16_t bp = freebufptr;
   uint16_t rp = bp;
-   
+
    if (string_space_check(1))
      return (char*)nullstring;
    sprintf((stringbuffer+bp),"%c",j);
-   
    freebufptr = bp + 2;
    return stringbuffer + rp;
 }
@@ -2074,9 +2080,12 @@ static VARIABLE_TYPE recall_statement(void)
     char dummy_s[MAX_STRINGLEN] = {0};
     EE_ReadVariable( varnum, 1, (uint8_t *) dummy_s, (uint8_t *) &rval );
     if (rval > 0)
+    {
       stringvariables[varnum] = scpy((char *)dummy_s);
+    }
     else
       stringvariables[varnum] = scpy((char *)nullstring);
+    garbage_collect();
   }
 #endif
 #if defined(VARIABLE_TYPE_ARRAY)
@@ -2431,21 +2440,21 @@ VARIABLE_TYPE ubasic_get_variable(uint8_t varnum)
 // string additions
 // 
 /*---------------------------------------------------------------------------*/
-void ubasic_set_stringvariable(uint8_t svarnum, char *svalue) {
-
-    if(svarnum >=0 && svarnum <MAX_SVARNUM)
-    {
-     stringvariables[svarnum] = svalue;
-    }
+void ubasic_set_stringvariable(uint8_t svarnum, char *svalue)
+{
+  if(svarnum <MAX_SVARNUM)
+  {
+    stringvariables[svarnum] = svalue;
+  }
 }
 
 /*---------------------------------------------------------------------------*/
 
-char* ubasic_get_stringvariable(uint8_t varnum)
+char * ubasic_get_stringvariable(uint8_t varnum)
 {
-  if(varnum>=0 && varnum< MAX_SVARNUM)
+  if(varnum < MAX_SVARNUM)
   {
-      return stringvariables[varnum];
+    return stringvariables[varnum];
   }
   return scpy((char*)nullstring);
 }
@@ -2470,6 +2479,8 @@ void ubasic_dim_arrayvariable(uint8_t varnum, int16_t newsize)
 
   int16_t oldsize;
   int16_t  current_location;
+
+_attach_at_the_end:
 
   current_location = arrayvariable[varnum];
   if (current_location == -1)
@@ -2532,16 +2543,13 @@ void ubasic_dim_arrayvariable(uint8_t varnum, int16_t newsize)
     next_location = next_location + mov_size + 1;
     current_location = current_location + mov_size + 1;
     arrays_data[current_location] = 0;
-
-    for (uint8_t i=mov_size; i<next_location; i++)
-      arrays_data[current_location + i];
   }
   while (arrays_data[next_location]>0);
   free_arrayptr = current_location;
 
   /** now the array should be added to the end of the list:
       if there is space do it! */
-  ubasic_dim_arrayvariable(varnum, newsize);
+  goto _attach_at_the_end;
 }
 
 void ubasic_set_arrayvariable(uint8_t varnum, uint16_t idx,  VARIABLE_TYPE value)
