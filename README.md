@@ -1,23 +1,18 @@
 # UBASIC PLUS
 
-## UBASIC
+uBasicPlus is an extension of the uBasic by Adam Dunkels (2006),
+https://github.com/adamdunkels/ubasic, based on
+'uBasic with strings' by David Mitchell (2008),
+http://www.zenoshrdlu.com/kapstuff/zsubasic.html,
+and elements of 'CHDK', http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
 
-uBasic is a small non-interactive interpreter of the programming language BASIC
-which offers a subset of the commands that are part of the language:
-- 26 integer variables, named 'a' through 'z'
-- *if/then/else* with support for single symbol logical operators (>,<,=)
-- *for/next*
-- *let*
-- *goto*
-- *gosub*
-- *print*
-- '\n' (new line) as end-of-line character
+uBasic Plus features:
 
 
 uBasic was written by Adam Dunkels circa 2006, and the code is available at github: https://github.com/adamdunkels/ubasic.
 
 
-## UBASIC WITH STRINGS
+### UBASIC WITH STRINGS
 
 uBasic with strings is a enhanced version of uBasic which adds support for strings:
 - 26 string variables, named a$-z$, string literals, variables and expressions can
@@ -46,14 +41,14 @@ uBasic with strings was written by David Mitchell circa 2008, and the code is
 available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasic.html
 
 
-## UBASIC PLUS
+## UBASIC PLUS Features
 
-uBasic Plus combines 'uBasic with strings' with elements of 'CHDK' version of uBasic.
-For CHDK please see http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
-
-
-uBasic Plus features:
-
+- UBASIC, which can be a small non-interactive interpreter of
+the programming language BASIC which offers a subset of the commands
+that are part of the language,
+26 integer variables, named 'a' through 'z',
+*if/then/else* with support for single symbol logical operators (>,<,=),
+*for/next*, *let*, *goto*, *gosub*, *print* and '\n' (new line) as end-of-line character.
 
 - No more line numbers:
 Instead CHDK-style labels are used, *:some_label* . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
