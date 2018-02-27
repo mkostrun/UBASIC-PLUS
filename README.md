@@ -6,7 +6,7 @@ https://github.com/adamdunkels/ubasic, based on
 http://www.zenoshrdlu.com/kapstuff/zsubasic.html,
 and elements of 'CHDK', http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
 
-## UBASIC PLUS Features
+## uBasic-Plus Interpreter
 
 - UBASIC, which can be a small non-interactive interpreter of
 the programming language BASIC which offers a subset of the commands
@@ -189,7 +189,7 @@ reboot of the device. The single page from FLASH is used as a scratch space, so 
 there is no more space left on the page, the entire page is erased.
 
 
-## *Command Line Interface* to uBasic-Plus
+## uBasic-Plus *Command Line Interface* 
 
 The Command Line Interface (CLI) supports the following commands:
 
