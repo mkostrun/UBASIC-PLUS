@@ -6,41 +6,6 @@ https://github.com/adamdunkels/ubasic, based on
 http://www.zenoshrdlu.com/kapstuff/zsubasic.html,
 and elements of 'CHDK', http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
 
-uBasic Plus features:
-
-
-uBasic was written by Adam Dunkels circa 2006, and the code is available at github: https://github.com/adamdunkels/ubasic.
-
-
-### UBASIC WITH STRINGS
-
-uBasic with strings is a enhanced version of uBasic which adds support for strings:
-- 26 string variables, named a$-z$, string literals, variables and expressions can
-be used in assignments and print statements string expressions can be compared
-for equality in if statements string expressions can be concatenated using '+'
-- *left$(s$, i)*
-    returns the first i characters of s$
-- *mid$(s$, i, j)*
-    returns the substring of length j starting at position i in s$
-- *right(s$, i, j)*
-    returns the last i characters of s$
-- *str$(i)*
-    returns the integer value i as a string - opposite of val()
-- *chr$(i)*
-    returns the i'th ASCII character - opposite of asc()
-- *val(s$)*
-    returns the numeric value of the string of digits s$ - opposite of str()
-- *len$(s$)*
-    returns the number of characters in s$
-- *instr$(t$, s$)*
-    returns the position of the string t$ in s$ (or 0)
-- *asc(s$)*
-    returns the ASCII code for the first character in s$ - opposite of val()
-
-uBasic with strings was written by David Mitchell circa 2008, and the code is
-available from the author's web site: http://www.zenoshrdlu.com/kapstuff/zsubasic.html
-
-
 ## UBASIC PLUS Features
 
 - UBASIC, which can be a small non-interactive interpreter of
@@ -49,6 +14,13 @@ that are part of the language,
 26 integer variables, named 'a' through 'z',
 *if/then/else* with support for single symbol logical operators (>,<,=),
 *for/next*, *let*, *goto*, *gosub*, *print* and '\n' (new line) as end-of-line character.
+
+- uBasic with strings, which adds support for strings:
+26 string variables, named a$-z$, string literals, variables and expressions can
+be used in assignments and print statements string expressions can be compared
+for equality in if statements string expressions can be concatenated using '+',
+and a number of string functions: *left$*, *mid$*, *right*, *str$*, *chr$*,
+*val*, *len$*, *instr$*, *asc*.
 
 - No more line numbers:
 Instead CHDK-style labels are used, *:some_label* . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
