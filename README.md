@@ -41,11 +41,13 @@ to the garbage collection done for managing arrays.
   goto label1;
   ```
 
-  However, unlike CHDK, when these labels are refered to in goto/gosub they are not
-inside quotation marks. Labels can use '_' in their names.
-Also, internally the lines are not numbered,
-rather pointers are used, so returns - from gosub, for/next, if/then/else, while/endwhile -
-are very fast as there are no line searches.
+  What is new in UBASIC-PLUS is that when these labels are refered to in
+goto/gosub this is done without quotation marks (unlike CHDK).
+Furthermore, in labels '_' can be used.
+Not even internally the lines are numbered (like it was the case with CHDK).
+Rather, pointers are used to script string, meaning that the returns
+- from gosub, for/next, if/then/else, while/endwhile - 
+are faster as they do not require searches (over line numbers).
 
 - Strings can be encompassed by single or double quotations. Tokenizer can identify labels.
 
