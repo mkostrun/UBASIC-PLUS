@@ -21,7 +21,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef _CONFIG_H_
@@ -175,7 +175,7 @@ typedef union
   struct
   {
     uint8_t notInitialized : 1;
-    uint8_t bit1 : 1;
+    uint8_t stringstackModified : 1;
     uint8_t bit2 : 1;
     uint8_t bit3 : 1;
     uint8_t bit4 : 1;
@@ -190,7 +190,7 @@ typedef union
 
 #if defined(VARIABLE_TYPE_STRING)
 #define MAX_STRINGVARLEN  64
-#define MAX_BUFFERLEN     128
+#define MAX_BUFFERLEN     256
 #define GBGCHECK          100
 #define MAX_SVARNUM       26
 #endif

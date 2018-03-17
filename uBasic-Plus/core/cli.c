@@ -28,13 +28,15 @@ return;",
 
 "\
 println 'Demo 2 - ubasic with strings';\
-a$= 'abcdefghi';\
+a$='abcdefghi';\
 b$='123456789';\
+println 'a$=' a$;\
+println 'b$=' b$;\
 println 'Length of a$=', len(a$);\
 println 'Length of b$=', len(b$);\
-if len(a$) = len(b$) then println 'same length';\
-if a$ = b$ then println 'same string'\n\
-c$=left$(a$+ b$,12);\
+if (len(a$) == len(b$)) then println 'same length';\
+if (a$ == b$) then println 'same string';\
+c$=left$(a$+b$,12);\
 println c$;\
 c$=right$(a$+b$, 12);\
 println c$;\
@@ -388,5 +390,3 @@ void ubasic_cli(void)
 
   return;
 }
-
-

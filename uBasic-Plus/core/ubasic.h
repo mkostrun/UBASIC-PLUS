@@ -27,7 +27,7 @@
  * SUCH DAMAGE.
  *
  */
- 
+
 /*
  * Modified to support simple string variables and functions by David Mitchell
  * November 2008.
@@ -64,8 +64,8 @@ VARIABLE_TYPE ubasic_get_arrayvariable(uint8_t varnum, uint16_t idx);
 
 #if defined(VARIABLE_TYPE_STRING)
 // string addition
-char* ubasic_get_stringvariable(uint8_t);
-void  ubasic_set_stringvariable(uint8_t, char *);
+int16_t ubasic_get_stringvariable(uint8_t);
+void  ubasic_set_stringvariable(uint8_t, int16_t);
 // end of string addition
 #endif
 

@@ -35,7 +35,7 @@
 
 /**
   * uBASIC Global and Exported Variables: Start
-  * 
+  *
   */
 volatile _Status ubasic_status = {.bit.notInitialized=1};
 uint8_t   input_how=0;
@@ -85,30 +85,31 @@ VARIABLE_TYPE variables[MAX_VARNUM];
 static VARIABLE_TYPE relation(void);
 static void numbered_line_statement(void);
 static void statement(void);
-static char string[MAX_STRINGLEN];
 
 #if defined(VARIABLE_TYPE_STRING)
-static char stringbuffer[MAX_BUFFERLEN];
-static uint16_t freebufptr = 0;
-static char *stringvariables[MAX_SVARNUM];
-static const char nullstring[] = "\0";
-static char* sexpr(void);
-static char* scpy(char *);
-static char* sconcat(char *, char *);
-static char* sleft(char *, uint16_t); 
-static char* sright(char *,uint16_t);
-static char* smid(char *, uint16_t, uint16_t);
-static char* sstr(uint16_t);
-static char* schr(uint16_t);
+static char stringstack[MAX_BUFFERLEN];
+static int16_t freebufptr = 0;
+static int16_t stringvariables[MAX_SVARNUM];
+static int16_t sexpr(void);
+static int16_t scpy(char *);
+static int16_t sconcat(char *, char *);
+static int16_t sleft(char *, int16_t);
+static int16_t sright(char *,int16_t);
+static int16_t smid(char *, int16_t, int16_t);
+static int16_t sstr(VARIABLE_TYPE j);
+static int16_t schr(VARIABLE_TYPE j);
 static uint8_t sinstr(uint16_t, char*, char*);
+/* two special macros for handling strings and their headers on stack */
+#define STRVAR(s) ( (uint8_t) *(stringstack+(s)) )
+#define STRPTR(s) ( (char*) (stringstack+(s)+1) )
 #endif
 
 #if defined(UBASIC_SCRIPT_HAVE_INPUT_FROM_SERIAL)
 static uint8_t input_varnum;
 static uint8_t input_type;
+#endif
 #if defined(VARIABLE_TYPE_ARRAY)
 VARIABLE_TYPE  input_array_index;
-#endif
 #endif
 
 #if defined(UBASIC_SCRIPT_HAVE_STORE_VARS_IN_FLASH)
@@ -136,10 +137,9 @@ void ubasic_clear_variables()
 #endif
 
 #if defined(VARIABLE_TYPE_STRING)
-  string[0] = 0;
   freebufptr = 0;
   for (i=0; i<MAX_SVARNUM; i++)
-    stringvariables[i] = scpy((char *)nullstring);
+    stringvariables[i] = -1;
 #endif
 }
 
@@ -205,183 +205,213 @@ uint8_t string_space_check(uint16_t l)
 }
 
 /*---------------------------------------------------------------------------*/
-void garbage_collect(void)
+void clear_stringstack(void)
 {
-  uint16_t totused = 0;
-  uint16_t i;
-  char *temp;
-  char *tp;
+  // if (!ubasic_status.bit.stringstackModified )
+    // return;
 
-  if (freebufptr < GBGCHECK)
-     return;
+  ubasic_status.bit.stringstackModified = 0;
 
-  for (i=0; i< MAX_SVARNUM; i++)
+  int16_t bottom=0;
+  int16_t len = 0;
+
+  // find bottom of the stringstack skip allocated stringstack space
+  while ( *(stringstack+bottom) != 0 )
   {
-    // calculate used space
-    totused += strlen(stringvariables[i]) + 1;
-  }
-  temp = malloc(totused); // alloc temporary space to store vars
-  tp = temp;
-  for (i=0; i< MAX_SVARNUM; i++)
-  {
-    // copy used strings to temporary store
-    strcpy(tp, stringvariables[i]);
-    tp += strlen(tp) + 1;
+    bottom += strlen( STRPTR(bottom) ) + 2;
+    if (freebufptr == bottom)
+      return;
   }
 
-  freebufptr = 0;
-  tp = temp;
-  for (i=0; i< MAX_SVARNUM; i++)
+  int16_t top = bottom;
+  do
   {
-    //copy back to buffer
-    stringvariables[i] = scpy(tp);
-    tp+= strlen(tp) + 1;
-  }
+    len = strlen( STRPTR(top) ) + 2;
 
-  free(temp); // free temp space
+    if ( *(stringstack+top) > 0 )
+    {
+      // moving stuff down
+      for (uint8_t i=0; i<=len; i++)
+        *(stringstack+bottom+i) = *(stringstack+top+i);
+
+      // update variable reference from top to bottom
+      stringvariables[ *(stringstack+bottom) - 1 ] = bottom;
+
+      bottom += len;
+    }
+    top += len;
+  }
+  while(top < freebufptr);
+
+  freebufptr = bottom;
+  return;
  }
 /*---------------------------------------------------------------------------*/
-static char* scpy(char *s1) // return a copy of s1
+// copy s1 at the end of stringstack and add a header
+static int16_t scpy(char *s1)
 {
-  uint16_t bp = freebufptr;
-  uint16_t l;
+  if (!s1)
+    return (-1);
 
-  l = strlen(s1);
+  int16_t bp = freebufptr;
+  int16_t l = strlen(s1);
+
+  if (!l)
+    return (-1);
 
   if (string_space_check(l))
-    return (char*)nullstring;
+    return (-1);
 
-  strcpy(stringbuffer+bp, s1);
+  ubasic_status.bit.stringstackModified = 1;
 
-  freebufptr = bp + l + 1;
+  *(stringstack+bp) = 0;
+  memcpy(stringstack+bp+1, s1, l+1);
 
-  return (stringbuffer+bp);
+  freebufptr = bp + l + 2;
+
+  return bp;
 }
-   
-/*---------------------------------------------------------------------------*/
-static char* sconcat(char *s1, char*s2)
-{
-  // return the concatenation of s1 and s2
-  uint16_t bp = freebufptr;
-  uint16_t rp = bp;
-  uint16_t l1, l2;
-  l1 = strlen(s1);
-  l2 = strlen(s2);
-  if (string_space_check(l1+l2))
-     return (char*)nullstring;
 
-  strcpy((stringbuffer+bp), s1);
-  bp += l1;
-  if (l1 == MAX_STRINGVARLEN)
+/*---------------------------------------------------------------------------*/
+// return the concatenation of s1 and s2 in a string at the end
+// of the stringbuffer
+static int16_t sconcat(char *s1, char *s2)
+{
+  int16_t l1=strlen(s1), l2=strlen(s2);
+
+  if (string_space_check(l1+l2))
+     return (-1);
+
+  int16_t rp=scpy(s1);
+  freebufptr -= 2; // last char in s1, will be overwritten by s2 header
+  int16_t fp=freebufptr;
+  char dummy = *(stringstack + fp);
+  scpy(s2);
+  *(stringstack + fp) = dummy; // overwrite s2 header
+  return (rp);
+}
+/*---------------------------------------------------------------------------*/
+static int16_t sleft(char *s1, int16_t l) // return the left l chars of s1
+{
+  int16_t bp = freebufptr;
+  int16_t rp = bp;
+
+  if (l<1)
+    return (-1);
+
+  if (string_space_check(l))
+    return (-1);
+
+  ubasic_status.bit.stringstackModified = 1;
+
+  if (strlen(s1) <=l)
   {
+    return scpy(s1);
+  }
+  else
+  {
+    // write header
+    *(stringstack + bp) = 0;
+    bp++;
+    memcpy(stringstack+bp, s1, l);
+    bp += l;
+    *(stringstack + bp) = 0;
     freebufptr = bp + 1;
-    return (stringbuffer + rp); 
   }
 
-  l2 = strlen(s2);
-  strcpy((stringbuffer+bp), s2);
-  if (l1 + l2 > MAX_STRINGVARLEN)
-  {
-    l2 = MAX_STRINGVARLEN - l1;
-    // truncate
-    *(stringbuffer + bp + l2) = '\0';
-  }   
-  freebufptr = bp + l2 + 1;
-  return (stringbuffer+rp);
+  return rp;
 }
 /*---------------------------------------------------------------------------*/
-static char* sleft(char *s1, uint16_t l) // return the left l chars of s1
+static int16_t sright(char *s1, int16_t l) // return the right l chars of s1
 {
-   uint16_t bp = freebufptr;
-   uint16_t rp = bp;
-   uint16_t i;
-   if (l<1) 
-     return scpy((char*)nullstring);
-   if (string_space_check(l))
-     return (char*)nullstring;
-   if (strlen(s1) <=l) {
-      return scpy(s1);
-   } else {
-      for (i=0; i<l; i++) {
-       *(stringbuffer +bp) = *s1;
-     bp++;
-     s1++;
-    }
-    *(stringbuffer + bp) = '\0';
-    freebufptr = bp+1;
-  
-   }
-   return stringbuffer + rp;
-}
-/*---------------------------------------------------------------------------*/
-static char* sright(char *s1, uint16_t l) // return the right l chars of s1
-{
-  uint16_t bp = freebufptr;
-  uint16_t rp = bp;
-  uint16_t i, j;
-   j = strlen(s1);
-   if (l<1) 
-     return scpy((char*)nullstring);
-   if (string_space_check(l))
-     return (char*)nullstring;
-   if (j <= l) {
-      return scpy(s1);
-   } else {
-      for (i=0; i<l; i++) {
-       *(stringbuffer + bp) = *(s1 + j-l);
-     bp++;
-     s1++;
-    }
-    *(stringbuffer + bp) = '\0';
-    freebufptr = bp+1;
-  
-   }
-   return stringbuffer + rp;
-}
-/*---------------------------------------------------------------------------*/
-static char* smid(char *s1, uint16_t l1, uint16_t l2) // return the l2 chars of s1 starting at offset l1
-{
-  uint16_t bp = freebufptr;
-  uint16_t rp = bp;
-  uint16_t i, j;
-   j = strlen(s1);
-   if (l2<1 || l1>j) 
-     return scpy((char*)nullstring);
-   if (string_space_check(l2))
-     return (char*)nullstring;
-   if (l2 > j-l1)
-     l2 = j-l1;
-   for (i=l1; i<l1+l2; i++) {
-      *(stringbuffer + bp) = *(s1 + l1 -1);
-      bp++;
-      s1++;
-   }
-   *(stringbuffer + bp) = '\0';
-   freebufptr = bp+1;
-   return stringbuffer + rp;
-}
-/*---------------------------------------------------------------------------*/
-static char* sstr(uint16_t j) // return the integer j as a string
-{
-  uint16_t bp = freebufptr;
-  uint16_t rp = bp;
-   if (string_space_check(10))
-     return (char*)nullstring;
-   sprintf((stringbuffer+bp),"%d",j);
-   freebufptr = bp + strlen(stringbuffer+bp) + 1;
-   return stringbuffer + rp;
-}
-/*---------------------------------------------------------------------------*/
-static char* schr(uint16_t j) // return the character whose ASCII code is j
-{
-  uint16_t bp = freebufptr;
-  uint16_t rp = bp;
+  int16_t j=strlen(s1);
 
-   if (string_space_check(1))
-     return (char*)nullstring;
-   sprintf((stringbuffer+bp),"%c",j);
-   freebufptr = bp + 2;
-   return stringbuffer + rp;
+  if (l<1)
+    return (-1);
+
+  if (j <= l)
+    l = j;
+
+  if (string_space_check(l))
+    return (-1);
+
+  return scpy(s1 + j - l);
+}
+
+/*---------------------------------------------------------------------------*/
+static int16_t smid(char *s1, int16_t l1, int16_t l2) // return the l2 chars of s1 starting at offset l1
+{
+  int16_t bp=freebufptr;
+  int16_t rp=bp;
+  int16_t i, j=strlen(s1);
+
+  if (l2<1 || l1>j)
+    return (-1);
+
+  if (string_space_check(l2))
+    return (-1);
+
+  if (l2 > j-l1)
+    l2 = j-l1;
+
+  ubasic_status.bit.stringstackModified = 1;
+
+  *(stringstack + bp) = 0;
+  bp++;
+
+  for (i=l1; i<l1+l2; i++)
+  {
+    *(stringstack + bp) = *(s1 + l1 -1);
+    bp++;
+    s1++;
+  }
+
+  *(stringstack + bp) = '\0';
+  freebufptr = bp+1;
+  return rp;
+}
+/*---------------------------------------------------------------------------*/
+static int16_t sstr(VARIABLE_TYPE j) // return the integer j as a string
+{
+  int16_t bp=freebufptr;
+  int16_t rp=bp;
+
+  if (string_space_check(10))
+    return (-1);
+
+  ubasic_status.bit.stringstackModified = 1;
+
+  *(stringstack+bp) = 0;
+  bp++;
+
+  sprintf((char*)(stringstack+bp),"%ld",j);
+
+  freebufptr = bp + strlen((char*)(stringstack+bp)) + 1;
+
+  return rp;
+}
+/*---------------------------------------------------------------------------*/
+static int16_t schr(VARIABLE_TYPE j) // return the character whose ASCII code is j
+{
+  int16_t bp=freebufptr;
+  int16_t rp=bp;
+
+  if (string_space_check(1))
+    return (-1);
+
+  ubasic_status.bit.stringstackModified = 1;
+
+  *(stringstack+bp) = 0;
+  bp++;
+
+  *(stringstack+bp) = j;
+  bp++;
+
+  *(stringstack+bp) = 0;
+  bp++;
+
+  freebufptr = bp;
+  return rp;
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t sinstr(uint16_t j, char *s, char *s1) // return the position of s1 in s (or 0)
@@ -394,10 +424,11 @@ static uint8_t sinstr(uint16_t j, char *s, char *s1) // return the position of s
 }
 
 /*---------------------------------------------------------------------------*/
-char* sfactor()
+int16_t sfactor()
 {
   // string form of factor
-  char *r=0, *s=0;
+  int16_t r=0, s=0;
+  char tmpstring[MAX_STRINGLEN];
 
   VARIABLE_TYPE i, j;
 
@@ -410,8 +441,8 @@ char* sfactor()
       break;
 
     case TOKENIZER_STRING:
-      tokenizer_string(string, sizeof(string));
-      r = scpy(string);
+      tokenizer_string(tmpstring, MAX_STRINGLEN);
+      r = scpy(tmpstring);
       accept(TOKENIZER_STRING);
       break;
 
@@ -424,7 +455,7 @@ char* sfactor()
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       i = fixedpt_toint(i);
   #endif
-      r = sleft(s,i);
+      r = sleft(STRPTR(s),i);
       accept(TOKENIZER_RIGHTPAREN);
       break;
 
@@ -437,7 +468,7 @@ char* sfactor()
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       i = fixedpt_toint(i);
   #endif
-      r = sright(s,i);
+      r = sright(STRPTR(s),i);
       accept(TOKENIZER_RIGHTPAREN);
       break;
 
@@ -462,7 +493,7 @@ char* sfactor()
       {
         j = 999; // ensure we get all of it
       }
-      r = smid(s,i,j);
+      r = smid(STRPTR(s),i,j);
       accept(TOKENIZER_RIGHTPAREN);
       break;
 
@@ -496,16 +527,16 @@ char* sfactor()
 
 /*---------------------------------------------------------------------------*/
 
-static char* sexpr(void) // string form of expr
+static int16_t sexpr( void ) // string form of expr
 {
-  char *s1, *s2;
+  int16_t s1, s2;
   s1 = sfactor();
   uint8_t op = tokenizer_token();
   while(op == TOKENIZER_PLUS)
   {
     tokenizer_next();
     s2 = sfactor();
-    s1 = sconcat(s1,s2);
+    s1 = sconcat(STRPTR(s1),STRPTR(s2));
     op = tokenizer_token();
   }
   return s1;
@@ -513,7 +544,7 @@ static char* sexpr(void) // string form of expr
 /*---------------------------------------------------------------------------*/
 static uint8_t slogexpr() // string logical expression
 {
-   char *s1, *s2;
+   int16_t s1, s2;
    uint8_t r = 0;
    s1 = sexpr();
    uint8_t op = tokenizer_token();
@@ -521,7 +552,7 @@ static uint8_t slogexpr() // string logical expression
    if(op == TOKENIZER_EQ)
    {
      s2 = sexpr();
-     r = (strcmp(s1,s2) == 0);
+     r = (strcmp(STRPTR(s1),STRPTR(s2)) == 0);
    }
    return r;
 }
@@ -546,7 +577,7 @@ static VARIABLE_TYPE factor(void)
   uint8_t varnum;
 #endif
 #if defined(VARIABLE_TYPE_STRING)
-  char *s, *s1;
+  int16_t s, s1;
 #endif
 
   switch(tokenizer_token())
@@ -556,9 +587,9 @@ static VARIABLE_TYPE factor(void)
     case TOKENIZER_LEN:
       accept(TOKENIZER_LEN);
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-      r = fixedpt_fromint(strlen(sexpr()));
+      r = fixedpt_fromint( strlen( STRPTR(sexpr()) ) );
   #else
-      r = strlen(sexpr());
+      r = strlen( STRPTR(sexpr()) );
   #endif
       break;
 
@@ -567,9 +598,9 @@ static VARIABLE_TYPE factor(void)
       accept(TOKENIZER_VAL);
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       s1 = sexpr();
-      r = str_fixedpt(s1, strlen(s1), 3);
+      r  = str_fixedpt( STRPTR(s1), strlen( STRPTR(s1) ), 3);
   #else
-      r = atoi(sexpr());
+      r = atoi( STRPTR(sexpr()) );
   #endif
       break;
 
@@ -578,9 +609,9 @@ static VARIABLE_TYPE factor(void)
       accept(TOKENIZER_ASC);
       s = sexpr();
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-      r = fixedpt_fromint(*s);
+      r = fixedpt_fromint( *STRPTR(s) );
   #else
-      r = *s;
+      r = *STRPTR(s);
   #endif
       break;
 
@@ -601,7 +632,7 @@ static VARIABLE_TYPE factor(void)
       accept(TOKENIZER_COMMA);
       s1 = sexpr();
       accept(TOKENIZER_RIGHTPAREN);
-      r = sinstr(j, s, s1);
+      r = sinstr(j, STRPTR(s), STRPTR(s1));
   #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
       r = fixedpt_fromint(r);
   #endif
@@ -1092,15 +1123,16 @@ uint8_t jump_label(char * label)
 
 static void gosub_statement(void)
 {
+  char tmpstring[MAX_STRINGLEN];
   accept(TOKENIZER_GOSUB);
 
   if(tokenizer_token() == TOKENIZER_LABEL)
   {
     // copy label
-    tokenizer_label(string, sizeof(string));
+    tokenizer_label(tmpstring, MAX_STRINGLEN);
     tokenizer_next();
 
-    // check for the end of line 
+    // check for the end of line
     while (tokenizer_token() == TOKENIZER_EOL)
       tokenizer_next();
  //     accept_cr();
@@ -1111,7 +1143,7 @@ static void gosub_statement(void)
       //gosub_stack[gosub_stack_ptr] = tokenizer_line_number();
       gosub_stack[gosub_stack_ptr] = tokenizer_save_offset();
       gosub_stack_ptr++;
-      jump_label(string);
+      jump_label(tmpstring);
       return;
     }
   }
@@ -1141,13 +1173,14 @@ static void return_statement(void)
 
 static void goto_statement(void)
 {
+  char tmpstring[MAX_STRINGLEN];
   accept(TOKENIZER_GOTO);
 
   if(tokenizer_token() == TOKENIZER_LABEL)
   {
-    tokenizer_label(string, sizeof(string));
+    tokenizer_label(tmpstring, sizeof(MAX_STRINGLEN));
     tokenizer_next();
-    jump_label(string);
+    jump_label(tmpstring);
     return;
   }
 
@@ -1240,7 +1273,7 @@ static void areadconf_statement(void)
     j = 7;
   accept(TOKENIZER_COMMA);
   r = relation();
-  // second argument: number of analog sample to average from 
+  // second argument: number of analog sample to average from
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
   r = fixedpt_toint(r);
 #endif
@@ -1328,6 +1361,8 @@ static void dwrite_statemet(void)
 static void print_statement(uint8_t println)
 {
   uint8_t print_how=0; /*0-xp, 1-hex, 2-oct, 3-dec, 4-bin*/
+  char tmpstring[MAX_STRINGLEN];
+
   // string additions
   if (println)
     accept(TOKENIZER_PRINTLN);
@@ -1350,14 +1385,14 @@ static void print_statement(uint8_t println)
 #if defined(VARIABLE_TYPE_STRING)
     if(tokenizer_token() == TOKENIZER_STRING)
     {
-      tokenizer_string(string, sizeof(string));
+      tokenizer_string(tmpstring, MAX_STRINGLEN);
       tokenizer_next();
     }
     else
 #endif
     if(tokenizer_token() == TOKENIZER_COMMA)
     {
-      sprintf(string, " ");
+      sprintf(tmpstring, " ");
       tokenizer_next();
     }
     else
@@ -1365,31 +1400,31 @@ static void print_statement(uint8_t println)
 #if defined(VARIABLE_TYPE_STRING)
       if (tokenizer_stringlookahead())
       {
-        sprintf(string, "%s", sexpr());
+        sprintf(tmpstring, "%s", STRPTR(sexpr()) );
       }
       else
 #endif
       {
         if (print_how == 1)
         {
-          sprintf(string, "%lx", (uint32_t) relation());
+          sprintf(tmpstring, "%lx", (uint32_t) relation());
         }
         else if (print_how == 2)
         {
-          sprintf(string, "%ld", relation());
+          sprintf(tmpstring, "%ld", relation());
         }
         else
         {
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-          fixedpt_str( relation(), string, FIXEDPT_FBITS/3 );
+          fixedpt_str( relation(), tmpstring, FIXEDPT_FBITS/3 );
 #else
-          sprintf(string, "%ld", relation());
+          sprintf(tmpstring, "%ld", relation());
 #endif
         }
       }
     // end of string additions
     }
-    print_serial(string);
+    print_serial(tmpstring);
   }
   while ( tokenizer_token() != TOKENIZER_EOL &&
           tokenizer_token() != TOKENIZER_ENDOFINPUT );
@@ -1647,7 +1682,14 @@ static void let_statement(void)
     varnum = tokenizer_variable_num();
     accept(TOKENIZER_STRINGVARIABLE);
     if (!accept(TOKENIZER_EQ))
-      ubasic_set_stringvariable(varnum, sexpr());
+    {
+      // print_serial("let_s:");
+      // int16_t d=sexpr();
+      // print_serial(STRPTR(d));
+      // print_serial("\n");
+      // ubasic_set_stringvariable(varnum,d);
+      ubasic_set_stringvariable(varnum,sexpr());
+    }
   }
   // end of string additions
 #endif
@@ -1681,7 +1723,7 @@ static void dim_statement(void)
   // array addition here
   uint8_t  varnum = tokenizer_variable_num();
 
-// 
+//
   accept (TOKENIZER_ARRAYVARIABLE);
 
 //   accept(TOKENIZER_LEFTPAREN);
@@ -1842,7 +1884,7 @@ static void input_statement_wait (void)
 {
   input_how = 0;
   accept(TOKENIZER_INPUT);
-  
+
   if (tokenizer_token() == TOKENIZER_PRINT_HEX)
   {
     tokenizer_next();
@@ -1910,10 +1952,12 @@ static void input_statement_wait (void)
 
 static void serial_input_completed(void)
 {
+  char tmpstring[MAX_STRINGLEN];
+
   // transfer serial input buffer to 'buf' only if something
   // has been received.
   // otherwise leave the variable content unchanged.
-  if (serial_input(string,MAX_STRINGLEN)>0)
+  if (serial_input(tmpstring,MAX_STRINGLEN)>0)
   {
     if ( (input_type == 0)
   #if defined(VARIABLE_TYPE_ARRAY)
@@ -1924,15 +1968,15 @@ static void serial_input_completed(void)
       VARIABLE_TYPE r;
       if ((input_how == 1)||(input_how == 2))
       {
-        r = atoi(string);
+        r = atoi(tmpstring);
       }
       else
       {
       // process number
 #if defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_24_8) || defined(VARIABLE_TYPE_FLOAT_AS_FIXEDPT_22_10)
-        r = str_fixedpt(string,MAX_STRINGLEN,FIXEDPT_FBITS>>1);
+        r = str_fixedpt(tmpstring,MAX_STRINGLEN,FIXEDPT_FBITS>>1);
 #else
-        r = atoi(string);
+        r = atoi(tmpstring);
 #endif
       }
 
@@ -1950,9 +1994,9 @@ static void serial_input_completed(void)
   #if defined(VARIABLE_TYPE_STRING)
     else if (input_type == 1)
     {
-      ubasic_set_stringvariable(input_varnum, string);
+      ubasic_set_stringvariable(input_varnum, scpy(tmpstring));
     }
-  #endif 
+  #endif
   }
 
   ubasic_status.bit.WaitForSerialInput = 0;
@@ -2081,11 +2125,10 @@ static VARIABLE_TYPE recall_statement(void)
     EE_ReadVariable( varnum, 1, (uint8_t *) dummy_s, (uint8_t *) &rval );
     if (rval > 0)
     {
-      stringvariables[varnum] = scpy((char *)dummy_s);
+      ubasic_set_stringvariable(varnum, scpy((char *)dummy_s));
     }
-    else
-      stringvariables[varnum] = scpy((char *)nullstring);
-    garbage_collect();
+
+    clear_stringstack();
   }
 #endif
 #if defined(VARIABLE_TYPE_ARRAY)
@@ -2128,8 +2171,8 @@ static void store_statement(void)
   {
     varnum = tokenizer_variable_num();
     accept(TOKENIZER_STRINGVARIABLE);
-    EE_WriteVariable( varnum, 1, strlen(stringvariables[varnum]),
-                      (uint8_t *) stringvariables[varnum] );
+    EE_WriteVariable( varnum, 1, strlen(STRPTR(stringvariables[varnum])),
+                      (uint8_t *) STRPTR(stringvariables[varnum]) );
   }
   // end of string additions
   #endif
@@ -2349,7 +2392,7 @@ void ubasic_run_program(void)
 
 #if defined(VARIABLE_TYPE_STRING)
   // string additions
-  garbage_collect();
+  clear_stringstack();
   // end of string additions
 #endif
 
@@ -2373,7 +2416,7 @@ uint8_t ubasic_execute_statement(char * stmt)
   do
   {
 #if defined(VARIABLE_TYPE_STRING)
-    garbage_collect();
+    clear_stringstack();
 #endif
 
     statement();
@@ -2438,25 +2481,47 @@ VARIABLE_TYPE ubasic_get_variable(uint8_t varnum)
 #if defined(VARIABLE_TYPE_STRING)
 //
 // string additions
-// 
+//
 /*---------------------------------------------------------------------------*/
-void ubasic_set_stringvariable(uint8_t svarnum, char *svalue)
+void ubasic_set_stringvariable(uint8_t svarnum, int16_t svalue)
 {
-  if(svarnum <MAX_SVARNUM)
+  if(svarnum < MAX_SVARNUM)
   {
+    // was it previously allocated?
+    if (stringvariables[svarnum] > -1)
+      *(stringstack + stringvariables[svarnum]) = 0;
+
     stringvariables[svarnum] = svalue;
+    if (svalue > -1)
+      *(stringstack + svalue) = svarnum + 1;
+
+    // print_serial("set_stringvar:");
+    // char msg[12];
+    // sprintf(msg, "[%d]", stringvariables[svarnum]);
+    // print_serial(msg);
+    // print_serial(STRPTR(stringvariables[svarnum]));
+    // print_serial("\n");
   }
 }
 
 /*---------------------------------------------------------------------------*/
 
-char * ubasic_get_stringvariable(uint8_t varnum)
+int16_t ubasic_get_stringvariable(uint8_t varnum)
 {
+
   if(varnum < MAX_SVARNUM)
   {
+    // print_serial("get_stringvar:");
+    // char msg[12];
+    // sprintf(msg, "[%d]", stringvariables[varnum]);
+    // print_serial(msg);
+    // print_serial(STRPTR(stringvariables[varnum]));
+    // print_serial("\n");
+
     return stringvariables[varnum];
   }
-  return scpy((char*)nullstring);
+
+  return (-1);
 }
 //
 // end of string additions
