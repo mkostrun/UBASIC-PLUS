@@ -1,10 +1,10 @@
 # UBASIC PLUS
 
 uBasicPlus is an extension of the uBasic by Adam Dunkels (2006),
-https://github.com/adamdunkels/ubasic, based on
-'uBasic with strings' by David Mitchell (2008),
+https://github.com/adamdunkels/ubasic, which includes
+the strings and their functions from 'uBasic with strings' by David Mitchell (2008),
 http://www.zenoshrdlu.com/kapstuff/zsubasic.html,
-and elements of 'CHDK', http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
+and some constructs and interpreter logic from 'CHDK', http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
 
 ## uBasic-Plus Interpreter
 
@@ -21,6 +21,15 @@ be used in assignments and print statements string expressions can be compared
 for equality in if statements string expressions can be concatenated using '+',
 and a number of string functions: *left$*, *mid$*, *right*, *str$*, *chr$*,
 *val*, *len$*, *instr$*, *asc*.
+
+What is new in UBASIC-PLUS is that string scratch space (SSS) is introduced in which
+all string variables and intermediate results are stored using a structure
+header = data. At the end of each statement the SSS is cleared of all non-assigned
+strings. This means that rather than pointers (size 4 bytes) the addresses in
+the space are used (2 bytes). This caused all string functions to be rewritten.
+Most importantly, the garbage collection is done in place rather then by
+temporarily doubling the storage space. The garbage collection now used is similar
+to the garbage collection done for managing arrays.
 
 - No more line numbers:
 Instead CHDK-style labels are used, *:some_label* . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
