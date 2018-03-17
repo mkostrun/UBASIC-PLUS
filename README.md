@@ -6,7 +6,7 @@ the strings and their functions from 'uBasic with strings' by David Mitchell (20
 http://www.zenoshrdlu.com/kapstuff/zsubasic.html,
 and some constructs and interpreter logic from 'CHDK', http://chdk.wikia.com/wiki/CHDK_Scripting_Cross_Reference_Page.
 
-## uBasic-Plus Interpreter
+## uBasic-Plus Interpreter Features
 
 - UBASIC, which can be a small non-interactive interpreter of
 the programming language BASIC which offers a subset of the commands
@@ -31,8 +31,13 @@ Most importantly, the garbage collection is done in place rather then by
 temporarily doubling the storage space. The garbage collection now used is similar
 to the garbage collection done for managing arrays.
 
-- No more line numbers:
-Instead CHDK-style labels are used, *:some_label* . However, unlike CHDK, when these labels are refered to in goto/gosub they are not
+- Elements of CHDK
+
+  The line numbering is removed and replaced by the labels CHDK-style
+
+  *:some_label*
+
+  However, unlike CHDK, when these labels are refered to in goto/gosub they are not
 inside quotation marks. Labels can use '_' in their names.
 Also, internally the lines are not numbered,
 rather pointers are used, so returns - from gosub, for/next, if/then/else, while/endwhile -
