@@ -140,6 +140,12 @@ the internal temperature sensor. From multiple calls required number of random b
 
   fixed point float to fixed point integer arithmetic functions.
 
+- *clear*
+
+  Clears all variables, arrays and strings. It is good practice to put it as the
+first line of the script.
+
+
 
 ### Hardware Control
 
@@ -201,12 +207,6 @@ the value longer the duration.
   - nreads: value reported to the user will be an average of so many readings.
 
 
-- *clear*
-
-  Clears all variables, arrays and strings. It is good practice to put it as the
-first line of the script.
-
-
 - *store(x[x$,x@]), i=recall(x[x$,x@])*
 
   Store and recall variable, string or array in FLASH. In that way variable can survive
@@ -214,7 +214,7 @@ reboot of the device. The single page from FLASH is used as a scratch space, so 
 there is no more space left on the page, the entire page is erased.
 
 
-## uBasic-Plus *Command Line Interface* 
+### uBasic-Plus *Command Line Interface*
 
 The Command Line Interface (CLI) supports the following commands:
 
