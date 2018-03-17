@@ -362,7 +362,7 @@ println 'Demo 3 Completed'
 end
 ```
 
-### Demo 4 - input array entries in 10 sec time
+### Demo 4 - input array entries in 10 sec time (use Arduino IDE Serial Terminal not Minicom)
 ```
 println 'Demo 4 - Input with timeouts'
 dim a@(5)
