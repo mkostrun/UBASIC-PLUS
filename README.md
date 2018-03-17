@@ -8,6 +8,8 @@ and some constructs and interpreter logic from 'CHDK', http://chdk.wikia.com/wik
 
 ## uBasic-Plus Interpreter Features
 
+### Software and Flow Control
+
 - UBASIC, which can be a small non-interactive interpreter of
 the programming language BASIC which offers a subset of the commands
 that are part of the language,
@@ -137,6 +139,9 @@ the internal temperature sensor. From multiple calls required number of random b
 - *floor, ceil, round, abs*
 
   fixed point float to fixed point integer arithmetic functions.
+
+
+### Hardware Control
 
 
 - *pinmode(pin,mode,speed), a=dread(pin), dwrite(pin,state)*
