@@ -1,9 +1,13 @@
 #include "main.h"
-#include "config.h"
-#include "eeprom.h"
+#include "../core/config.h"
+#include "./eeprom.h"
 
 #if defined(USE_STM32F0XX_NUCLEO) || defined(USE_STM32F0XX_DISCOVERY)
-  #define PAGE (63)
+
+  #if !defined(PAGE)
+    #define PAGE (63)
+  #endif
+
 #endif
 
 static uint32_t ee_start_address;
@@ -367,7 +371,7 @@ void EE_DumpFlash(void)
     {
       print_serial("@ (array)\n");
     }
-    sprintf(msg, "  Size:%u+%u\n", sizeof(header), EE_FULLHEADER_DATALEN(header));
+    sprintf(msg, "  Size:%u+%u bytes\n", sizeof(header), EE_FULLHEADER_DATALEN(header));
     print_serial(msg);
 
     PageCheckAddress += sizeof(EE_FULLHEADER_TYPE) + EE_FULLHEADER_DATALEN(header);

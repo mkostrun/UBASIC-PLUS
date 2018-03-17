@@ -125,6 +125,11 @@
   #if defined(EE_ERASE_VARNAME_FROM_FULLHEADER)
     #define EE_FULLHEADER_NO_VARNAME ((EE_FULLHEADER_TYPE) 0xff00)
   #endif
+
+#else
+
+  #error "EE_HEADER_FORMAT not defined. Cannot continue!"
+  
 #endif
 
 

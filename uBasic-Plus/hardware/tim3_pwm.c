@@ -63,7 +63,6 @@ void analogWriteConfig (uint16_t psc, uint16_t per)
     }
   }
 
-  GPIO_InitTypeDef GPIO_InitStruct;
   TIM_MasterConfigTypeDef sMasterConfig;
 
   memset(&htim3, 0, sizeof(htim3));
