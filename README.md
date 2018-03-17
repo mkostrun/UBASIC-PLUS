@@ -22,9 +22,9 @@ for equality in if statements string expressions can be concatenated using '+',
 and a number of string functions: *left$*, *mid$*, *right*, *str$*, *chr$*,
 *val*, *len$*, *instr$*, *asc*.
 
-What is new in UBASIC-PLUS is that string scratch space (SSS) is introduced in which
+  What is new in UBASIC-PLUS is that string scratch space (SSS) is introduced in which
 all string variables and intermediate results are stored using a structure
-header = data. At the end of each statement the SSS is cleared of all non-assigned
+header (1byte) + data (strlen+1 bytes). At the end of each statement the SSS is cleared of all non-assigned
 strings. This means that rather than pointers (size 4 bytes) the addresses in
 the space are used (2 bytes). This caused all string functions to be rewritten.
 Most importantly, the garbage collection is done in place rather then by
