@@ -35,7 +35,11 @@ to the garbage collection done for managing arrays.
 
   The line numbering is removed and replaced by the labels CHDK-style
 
-  *:some_label*
+  ```
+  :label1
+  ....
+  goto label1;
+  ```
 
   However, unlike CHDK, when these labels are refered to in goto/gosub they are not
 inside quotation marks. Labels can use '_' in their names.
